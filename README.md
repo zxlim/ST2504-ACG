@@ -1,5 +1,6 @@
 #ST2504: Applied Cryptography - Encrypted Chat Program Assignment
-#####NOTE: The files to work on is inside the folder "SourceCode".
+#####NOTE: The files to work on is located inside the folder "SourceCode".
+#####The folder "Original" contains the Java source code for the original client and server programs provided on BlackBoard.
 
 
 ##Before compiling and/or running the java files, check whether Java 8 and Java Cryptographic Extension (JCE) is correctly installed on your system.
