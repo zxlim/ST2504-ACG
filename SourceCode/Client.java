@@ -57,7 +57,7 @@ public class Client  {
 			return false;
 		}
 
-		String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort() + "\nConnection secured with AES-256.\n";
+		String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
 		display(msg);
 
 		/* Creating both Data Stream */
@@ -199,16 +199,16 @@ public class Client  {
 			String msg = scan.nextLine();
 			// logout if message is LOGOUT
 			if(msg.equalsIgnoreCase("LOGOUT")) {
-				client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, null));
+				client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
 				// break to do the disconnect
 				break;
 			}
 			// message WhoIsIn
 			else if(msg.equalsIgnoreCase("WHOISIN")) {
-				client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, null));
+				client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));
 			}
 			else {				// default to ordinary message
-				client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, Crypto.encrypt_AES(msg)));
+				client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
 			}
 		}
 		// done disconnect
@@ -224,7 +224,7 @@ public class Client  {
 		public void run() {
 			while(true) {
 				try {
-					String msg = Crypto.decrypt_AES((byte[]) sInput.readObject());
+					String msg = (String) sInput.readObject();
 					// if console mode print the message and add back the prompt
 					if(cg == null) {
 						System.out.println(msg);
@@ -235,8 +235,7 @@ public class Client  {
 					}
 				}
 				catch(IOException e) {
-					//display("Server has close the connection: " + e);
-					display("You have disconnected from the server");
+					display("Server has close the connection: " + e);
 					if(cg != null)
 						cg.connectionFailed();
 					break;

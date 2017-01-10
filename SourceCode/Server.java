@@ -238,13 +238,13 @@ public class Server {
 				catch(ClassNotFoundException e2) {
 					break;
 				}
+				// the messaage part of the ChatMessage
+				String message = cm.getMessage();
 
 				// Switch on the type of message receive
 				switch(cm.getType()) {
 
 				case ChatMessage.MESSAGE:
-					// the messaage part of the ChatMessage
-					String message = Crypto.decrypt_AES(cm.getMessage());
 					broadcast(username + ": " + message);
 					break;
 				case ChatMessage.LOGOUT:
@@ -295,7 +295,7 @@ public class Server {
 			}
 			// write the message to the stream
 			try {
-				sOutput.writeObject(Crypto.encrypt_AES(msg));
+				sOutput.writeObject(msg);
 			}
 			// if an error occurs, do not abort just inform the user
 			catch(IOException e) {

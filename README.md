@@ -4,10 +4,6 @@
 
 
 ##Before compiling and/or running the java files, check whether Java 8 and Java Cryptographic Extension (JCE) is correctly installed on your system.
-To check Java version:
-```
-java -version
-```
 To check JCE installation (Start from repo's root directory ACG-Chat):
 ```
 cd JCE_Test

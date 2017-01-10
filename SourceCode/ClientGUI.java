@@ -2,7 +2,6 @@
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.nio.charset.Charset;
 
 
 /*
@@ -122,19 +121,19 @@ public class ClientGUI extends JFrame implements ActionListener {
 		Object o = e.getSource();
 		// if it is the Logout button
 		if(o == logout) {
-			client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, null));
+			client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
 			return;
 		}
 		// if it the who is in button
 		if(o == whoIsIn) {
-			client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, null));
+			client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));
 			return;
 		}
 
 		// ok it is coming from the JTextField
 		if(connected) {
 			// just have to send the message
-			client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, Crypto.encrypt_AES(tf.getText())));
+			client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, tf.getText()));
 			tf.setText("");
 			return;
 		}
