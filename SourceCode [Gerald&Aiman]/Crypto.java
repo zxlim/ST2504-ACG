@@ -113,10 +113,10 @@ public class Crypto {
 	}
 
 	//Generators
-	static byte[] generate_aesKey() {
+	protected static byte[] generate_aesKey() {
 		try {
 			final KeyGenerator keygen = KeyGenerator.getInstance("AES", "SunJCE");
-			keygen.init(128, new SecureRandom());
+			keygen.init(256, new SecureRandom());
 
 			return (keygen.generateKey()).getEncoded();
 		} catch (Exception e) {
@@ -143,7 +143,7 @@ public class Crypto {
 	protected static PKI generate_ECDSA() {
 		try {
 			final KeyPairGenerator kpGen = KeyPairGenerator.getInstance("EC", "SunEC");
-			final ECGenParameterSpec kpGenParams = new ECGenParameterSpec("secp256r1");
+			final ECGenParameterSpec kpGenParams = new ECGenParameterSpec("secp384r1");
 			kpGen.initialize(kpGenParams);
 			final KeyPair ecdsaKey = kpGen.genKeyPair();
 
@@ -207,7 +207,8 @@ public class Crypto {
 		}
 	}
 
-	private static byte[] pbkdf2(final String input, final byte[] salt, final int length) throws Exception {
+	protected static byte[] pbkdf2(final String input, final byte[] salt, final int length) throws Exception {
+		//final int length: set 512 for password hashes
 		try {
 			final char[] inputChar = input.toCharArray();
 
@@ -229,5 +230,9 @@ public class Crypto {
 
 	protected static String bytesToStr(final byte[] input) {
 		return new String(input);
+	}
+
+	protected static String bytesToBase64(final byte[] input) {
+		return Base64.getEncoder().encodeToString(input);
 	}
 } //class
