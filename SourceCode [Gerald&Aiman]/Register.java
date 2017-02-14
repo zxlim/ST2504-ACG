@@ -24,9 +24,10 @@ public class Register {
   private String serverAddress;
 	private int portNumber;
 
-  Register(String serverAddress, int portNumber) {
+  Register(String server, int port) {
 		// which calls the common constructor with the GUI set to null
-		this(serverAddress, portNumber);
+		this.serverAddress = server;
+    this.portNumber = port;
 	}
 
   public static void main(String[] args) {
@@ -44,7 +45,7 @@ public class Register {
 				break;
 			// invalid number of arguments
 			default:
-				System.out.println("Usage is: > java Register [serverAddress]\nDefault serverAddress = localhost");
+				System.out.println("Error! Incorrect arguments.\n > Usage is: > java Register [serverAddress]\n > Default serverAddress = localhost");
 			return;
 		}
 
@@ -118,6 +119,15 @@ public class Register {
 	 */
 	private void display(String msg) {
 			System.out.println(msg);      // println in console mode
+	}
+
+  void sendMessage(ChatMessage msg) {
+		try {
+			sOutput.writeObject(msg);
+		}
+		catch(IOException e) {
+			display("Exception writing to server: " + e);
+		}
 	}
 
   private void disconnect() {
