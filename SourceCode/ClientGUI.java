@@ -176,8 +176,8 @@ public class ClientGUI extends JFrame implements ActionListener {
 			logout.setEnabled(true);
 			whoIsIn.setEnabled(true);
 			// disable the Server and Port JTextField
-			tfServer.setEditable(false);
-			tfPort.setEditable(false);
+			tfServer.setEditable(true);
+			tfPort.setEditable(true);
 			// Action listener for when the user enter a message
 			tf.addActionListener(this);
 		}
