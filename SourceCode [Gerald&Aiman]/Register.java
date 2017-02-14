@@ -14,14 +14,20 @@ import java.util.*;
 */
 
 public class Register {
+
   // for I/O
   private ObjectInputStream sInput;		// to read from the socket
   private ObjectOutputStream sOutput;		// to write on the socket
   private Socket socket;
 
 	// the server, the port and the username
-  private String server;
-	private int port;
+  private String serverAddress;
+	private int portNumber;
+
+  Register(String serverAddress, int portNumber) {
+		// which calls the common constructor with the GUI set to null
+		this(serverAddress, portNumber);
+	}
 
   public static void main(String[] args) {
     // default values
@@ -41,10 +47,10 @@ public class Register {
 				System.out.println("Usage is: > java Register [serverAddress]\nDefault serverAddress = localhost");
 			return;
 		}
-}
+
 
   // create the Client object
-  Client client = new Client(serverAddress, portNumber);
+  Register client = new Register(serverAddress, portNumber);
   // test if we can start the connection to the Server
   // if it failed nothing we can do
   if(!client.start())
@@ -81,7 +87,7 @@ public class Register {
 	public boolean start() {
 		// try to connect to the server
 		try {
-			socket = new Socket(server, port);
+			socket = new Socket(serverAddress, portNumber);
 		}
 		// if it failed not much I can so
 		catch(Exception ec) {
