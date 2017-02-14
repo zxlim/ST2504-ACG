@@ -5,8 +5,8 @@ import java.awt.event.*;
 
 
 /*
- * The Client with its GUI
- */
+* The Client with its GUI
+*/
 public class ClientGUI extends JFrame implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
@@ -31,7 +31,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 	// Constructor connection receiving a socket number
 	ClientGUI(String host, int port) {
 
-		super("Chat Client");
+		super("PPAP Secure Chat");
 		defaultPort = port;
 		defaultHost = host;
 
@@ -144,15 +144,15 @@ public class ClientGUI extends JFrame implements ActionListener {
 			String username = tf.getText().trim();
 			// empty username ignore it
 			if(username.length() == 0)
-				return;
+			return;
 			// empty serverAddress ignore it
 			String server = tfServer.getText().trim();
 			if(server.length() == 0)
-				return;
+			return;
 			// empty or invalid port numer, ignore it
 			String portNumber = tfPort.getText().trim();
 			if(portNumber.length() == 0)
-				return;
+			return;
 			int port = 0;
 			try {
 				port = Integer.parseInt(portNumber);
@@ -165,7 +165,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 			client = new Client(server, port, username, this);
 			// test if we can start the Client
 			if(!client.start())
-				return;
+			return;
 			tf.setText("");
 			label.setText("Enter your message below");
 			connected = true;
@@ -186,7 +186,46 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 	// to start the whole thing the server
 	public static void main(String[] args) {
-		new ClientGUI("localhost", 1500);
+		final boolean check = login();
+		if (check) {
+			System.out.println("OK");
+			new ClientGUI("localhost", 1500);
+		} else {
+			System.out.println("Fail");
+			System.exit(0);
+		}
 	}
 
+	private static boolean login() {
+		try {
+			JFrame frame = new JFrame();
+			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setLocationRelativeTo( null );
+			frame.setVisible( true );
+			frame.setSize(500, 200);
+
+			//Login Panel
+			JPanel loginPanel = new JPanel(new GridLayout(2,2));
+
+			JLabel userLabel = new JLabel("Username ");
+			JTextField userInput = new JTextField(15);
+			JLabel pwLabel = new JLabel("Password ");
+			JPasswordField pwInput = new JPasswordField(15);
+			loginPanel.add(userLabel);
+			loginPanel.add(userInput);
+			loginPanel.add(pwLabel);
+			loginPanel.add(pwInput);
+
+			int result = JOptionPane.showConfirmDialog(frame, loginPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+			if (result == JOptionPane.YES_OPTION) {
+				System.out.println(userInput.getText() + " : " + new String(pwInput.getPassword()));
+				return true;
+			} else {
+				return false;
+			}
+		} catch (NullPointerException e) {
+			return false;
+		}
+	}
 }
