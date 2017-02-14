@@ -1,3 +1,8 @@
+
+import java.net.*;
+import java.io.*;
+import java.util.*;
+
 /*
 **	[ST2504 Applied Cryptography Assignment]
 **	[Encrypted Chat Program]
@@ -8,7 +13,7 @@
 **	Lim Zhao Xiang (P1529559)
 */
 
-public class Registration {
+public class Register {
   // for I/O
   private ObjectInputStream sInput;		// to read from the socket
   private ObjectOutputStream sOutput;		// to write on the socket
@@ -36,6 +41,39 @@ public class Registration {
 				System.out.println("Usage is: > java Register [serverAddress]\nDefault serverAddress = localhost");
 			return;
 		}
+}
+
+  // create the Client object
+  Client client = new Client(serverAddress, portNumber);
+  // test if we can start the connection to the Server
+  // if it failed nothing we can do
+  if(!client.start())
+    return;
+
+  // wait for messages from user
+  Scanner scan = new Scanner(System.in);
+  // loop forever for message from the user
+  while(true) {
+    System.out.print("> ");
+    // read message from user
+    String msg = scan.nextLine();
+    // logout if message is LOGOUT
+    if(msg.equalsIgnoreCase("LOGOUT")) {
+      client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
+      // break to do the disconnect
+      break;
+    }
+    // message WhoIsIn
+    else if(msg.equalsIgnoreCase("WHOISIN")) {
+      client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));
+    }
+    else {				// default to ordinary message
+      client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
+    }
+  }
+  // done disconnect
+  client.disconnect();
+  }
 
   /*
 	 * To start the dialog
@@ -47,7 +85,7 @@ public class Registration {
 		}
 		// if it failed not much I can so
 		catch(Exception ec) {
-			display("Error connectiong to server:" + ec);
+			display("Error connecting to server:" + ec);
 			return false;
 		}
 
@@ -69,12 +107,11 @@ public class Registration {
 		return true;
 	}
 
-
-  private void display(String msg) {
-		if(cg == null)
+  /*
+	 * To send a message to the console or the GUI
+	 */
+	private void display(String msg) {
 			System.out.println(msg);      // println in console mode
-		else
-			cg.append(msg + "\n");		// append to the ClientGUI JTextArea (or whatever)
 	}
 
   private void disconnect() {
@@ -91,11 +128,7 @@ public class Registration {
 		}
 		catch(Exception e) {} // not much else I can do
 
-		// inform the GUI
-		if(cg != null)
-			cg.connectionFailed();
 
 	}
-
 
 }
