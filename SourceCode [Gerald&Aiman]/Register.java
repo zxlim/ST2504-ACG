@@ -73,6 +73,7 @@ public class Register {
     if(msg.equalsIgnoreCase("LOGOUT")) {
       client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
     }
+    else {
       //client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
       newUsername = msg;
     }
