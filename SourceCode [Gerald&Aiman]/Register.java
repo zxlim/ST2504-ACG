@@ -24,6 +24,9 @@ public class Register {
   private String serverAddress;
 	private int portNumber;
 
+ String newUsername;
+ String newPassword;
+
   Register(String server, int port) {
 		// which calls the common constructor with the GUI set to null
 		this.serverAddress = server;
@@ -60,24 +63,47 @@ public class Register {
   // wait for messages from user
   Scanner scan = new Scanner(System.in);
   // loop forever for message from the user
-  while(true) {
-    System.out.print("> ");
+
+    System.out.print(" This program is used to REGISTER new users ONLY.\n Please exit this program if you are an existing user or already have an account.\n Enter LOGOUT to exit.\n\n");
+    //prompting for their new username
+    System.out.print("Enter your new username > ");
     // read message from user
     String msg = scan.nextLine();
     // logout if message is LOGOUT
     if(msg.equalsIgnoreCase("LOGOUT")) {
       client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
-      // break to do the disconnect
-      break;
     }
-    // message WhoIsIn
-    else if(msg.equalsIgnoreCase("WHOISIN")) {
-      client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));
+      //client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
+      newUsername = msg;
     }
-    else {				// default to ordinary message
-      client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
+    //prompting for their new password
+    System.out.print("Enter your new password > ");
+    // read message from user
+    msg = scan.nextLine();
+    // logout if message is LOGOUT
+    if(msg.equalsIgnoreCase("LOGOUT")) {
+      client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
     }
-  }
+    else {
+      newPassword = msg;
+    }
+    //prompting for their new password AGAIN
+    System.out.print("Enter your new password again > ");
+    // read message from user
+    msg = scan.nextLine();
+    // logout if message is LOGOUT
+    if(msg.equalsIgnoreCase("LOGOUT")) {
+      client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
+    }
+    else if (msg.equals(newPassword)) {
+      System.out.print("Registration complete!\n Your account details are as follows:\n Username: " + newUsername + "\n Password: " + newPassword);
+      System.out.print("Program will now exit.");
+    }
+    else {
+      System.out.print("Error!\n > Your passwords do not match!\n Please try again!");
+    }
+
+
   // done disconnect
   client.disconnect();
   }
