@@ -104,11 +104,11 @@ public class ClientGUI extends JFrame implements ActionListener {
 		label.setText("Enter your username below");
 		tf.setText("Anonymous");
 		// reset port number and host name as a construction time
-		//tfPort.setText("" + defaultPort);
-		//tfServer.setText(defaultHost);
+		tfPort.setText("" + defaultPort);
+		tfServer.setText(defaultHost);
 		// let the user change them
-		tfServer.setEditable(true);
-		tfPort.setEditable(true);
+		tfServer.setEditable(false);
+		tfPort.setEditable(false);
 		// don't react to a <CR> after the username
 		tf.removeActionListener(this);
 		connected = false;
@@ -176,8 +176,8 @@ public class ClientGUI extends JFrame implements ActionListener {
 			logout.setEnabled(true);
 			whoIsIn.setEnabled(true);
 			// disable the Server and Port JTextField
-			tfServer.setEditable(false);
-			tfPort.setEditable(false);
+			tfServer.setEditable(true);
+			tfPort.setEditable(true);
 			// Action listener for when the user enter a message
 			tf.addActionListener(this);
 		}
