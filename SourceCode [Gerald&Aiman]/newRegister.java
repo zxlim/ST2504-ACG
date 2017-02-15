@@ -1,6 +1,7 @@
 
 import javax.swing.JOptionPane;
-import java.io.FileInputStream;
+import java.net.*;
+import java.io.*;
 import java.security.Key;
 //import java.security.KeyPair;
 import java.security.KeyStore;
@@ -19,15 +20,33 @@ import java.security.cert.Certificate;
 
 public class newRegister {
 
+  // Server address and port
+  private String registServerAddress = "localhost";
+  private int registServerPort = 1449;
 
-  public static void main(String[] args){
-    int option =  JOptionPane.showConfirmDialog(null, "This program is used to register new users only.\nPlease exit this program if you are an existing user or already have an account.\n\t\tHit CANCEL to exit.\n\n","Create an account",JOptionPane.OK_CANCEL_OPTION);
+  // for I/O
+  //private ObjectInputStream sInput;		// to read from the socket
+  //private ObjectOutputStream sOutput;		// to write on the socket
+  private Socket socket;
+
+    public static void main(String[] args){
+
+    // For username and password loop
     boolean usernameInput = false;
     boolean passwordInput = false;
+
+    // For user details
     String username;
     String password;
+
+    // Encrypted user details
     byte[] usernameRSA;
     byte[] passwordRSA;
+
+
+
+    // Start of registration
+    int option =  JOptionPane.showConfirmDialog(null, "This program is used to register new users only.\nPlease exit this program if you are an existing user or already have an account.\n\t\tHit CANCEL to exit.\n\n","Create an account",JOptionPane.OK_CANCEL_OPTION);
 
     try {
         // Checking to continue registering new user
@@ -67,7 +86,7 @@ public class newRegister {
 
       // Checking that both passwords that user entered matches
       if (password.equals(passwordCheck)){
-        JOptionPane.showMessageDialog(null,"User details successfully completed.\nCreating user account for user [" + username + "]...");
+        JOptionPane.showMessageDialog(null,"User details successfully completed.\n\n\nCreating user account for user [" + username + "]...");
         passwordInput = true;
       } else {
         JOptionPane.showMessageDialog(null,"Your passwords did not match! Please try again.");
@@ -75,7 +94,7 @@ public class newRegister {
     } else {
         JOptionPane.showMessageDialog(null,"Your password did not meet the requirements. Please try again.");
     }
-    
+
     } while (!passwordInput);
 
     System.out.println("User details successfully completed.\nProcessing details now.. please wait.");
@@ -118,5 +137,45 @@ public class newRegister {
       System.exit(0);
     }
 
+    connectToServer();
+
     }
+
+    public void connectToServer() {
+      try {
+  			socket = new Socket(registServerAddress, registServerPort);
+  		}
+  		// if it failed not much I can so
+  		catch(Exception e) {
+  			System.out.print("Error connecting to server:" + e);
+  			//return false;
+  		}
+
+      String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
+      System.out.print(msg);
+      try {
+        socket.close();
+      }
+      catch(Exception e){
+        System.out.print("Error disconnecting from server: " + e);
+      //return false;
+      }
+    //return true
+    }
+
+    // private void disconnect() {
+  	// 	try {
+  	// 		if(sInput != null) sInput.close();
+  	// 	}
+  	// 	catch(Exception e) {} // not much else I can do
+  	// 	try {
+  	// 		if(sOutput != null) sOutput.close();
+  	// 	}
+  	// 	catch(Exception e) {} // not much else I can do
+    //       try{
+  	// 		if(socket != null) socket.close();
+  	// 	}
+  	// 	catch(Exception e) {} // not much else I can do
+  	// }
+
   }
