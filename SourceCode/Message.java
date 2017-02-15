@@ -31,14 +31,14 @@ public class Message implements Serializable {
 	Message(final int type, final byte[] message, final byte[] signature) {
 		this.type = type;
 		this.message = message;
-		this.signature = signature
+		this.signature = signature;
 	}
 
 	//Encrypted Message object
 	Message(final int type, final AES encryptedMessage, final byte[] signature) {
 		this.type = type;
 		this.encryptedMessage = encryptedMessage;
-		this.signature = signature
+		this.signature = signature;
 	}
 
 	//Whisper (Encrypted) Message object
@@ -47,7 +47,7 @@ public class Message implements Serializable {
 		this.sender = sender;
 		this.receiver = receiver;
 		this.encryptedMessage = encryptedMessage;
-		this.signature = signature
+		this.signature = signature;
 	}
 
 	int getType() {
@@ -66,7 +66,7 @@ public class Message implements Serializable {
 		return message;
 	}
 
-	byte[] getEncrypted() {
+	AES getEncrypted() {
 		return encryptedMessage;
 	}
 

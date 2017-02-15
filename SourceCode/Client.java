@@ -41,12 +41,11 @@ public class Client  {
 		try {
 			socket = new Socket(server, port);
 		} catch (Exception e) {
-			display("Error connectiong to server: " + e);
+			display("Error connectiong to server. Server might be down.");
 			return false;
 		}
 
-		String msg = "[DEBUG] Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
-		display(msg);
+		display("Connecting to server at " + socket.getInetAddress() + ":" + socket.getPort() + "...\n");
 
 		//Create I/O Stream
 		try {
@@ -63,32 +62,42 @@ public class Client  {
 		if (userAccount == null) {
 			return false;
 		} else {
-			//Send account credentials
-			sOutput.writeObject(userAccount);
+			try {
+				//Send account credentials
+				sOutput.writeObject(userAccount);
+			} catch (Exception e) {
+				display("[Error] Unable to login to server. Please try again.");
+				return false;
+			}
 		}
 
 		//Receive reply from server
-		final Message loginStatus = (Message) sInput.readObject();
+		try {
+			final Message loginStatus = (Message) sInput.readObject();
+			final boolean verifySig = Crypto.verify_ECDSA(loginStatus.getMessage(), serverECDSA.getPublic(), loginStatus.getSignature());
 
-		if (!verify_ECDSA(loginStatus.getMessage(), serverECDSA.getPublic(), loginStatus.getSignature())) {
-			display("Login failed");
-			disconnect();
-			if(cg != null) {
-				cg.connectionFailed();
+			if (!verifySig) {
+				display("Invalid username or password. Please try again.");
+				disconnect();
+				if(cg != null) {
+					cg.connectionFailed();
+				}
+				return false;
 			}
+		} catch (Exception e) {
+			display("[Error] Unable to login to server. Please try again.");
 			return false;
 		}
 
 		//Encrypt connection between Client and Server, handled by encryptConnection method
 		try {
 			if (!encryptConnection()) {
-				sOutput.writeObject("Unsecure"); //Temporary only
-				sendMessage(new ChatMessage(ChatMessage.LOGOUT));
+				sendMessage(new Message(Message.LOGOUT));
 				disconnect();
 				if(cg != null) {
 					cg.connectionFailed();
 				}
-				display("Connection to server has been terminated.\n");
+				display("Connection to server has been terminated due to security reasons.\n");
 				return false;
 			}
 		} catch (Exception e) {
@@ -166,7 +175,7 @@ public class Client  {
 	}
 
 	//Send message to Server
-	void sendMessage(ChatMessage msg) {
+	void sendMessage(Message msg) {
 		try {
 			sOutput.writeObject(msg);
 		} catch(IOException e) {
@@ -192,7 +201,7 @@ public class Client  {
 			//
 		}
 
-		//Tell GUI connection is closed
+		//Tell GUI client has disconnected
 		if(cg != null) {
 			cg.connectionFailed();
 		}
@@ -212,20 +221,20 @@ public class Client  {
 		final String serverAddress = scan.nextLine();
 		//Get Server Port
 		System.out.print("Server Port: ");
-		final String portStr = scan.nextLine();
+		portNumber = scan.nextInt();
 
-		try {
-			//Parse port typed by user as integer
-			portNumber = Integer.parseInt(portStr);
+		// try {
+		// 	//Parse port typed by user as integer
+		// 	portNumber = Integer.parseInt(portStr);
+		// }
+		// catch(NumberFormatException e) {
+		// 	//If entered value is not integer, return and exit
+		// 	System.out.println("Invalid port number.\nPlease enter a port number between 0 and 65535.");
+		// 	return;
+		// }
 
-			//Verify port range
-			if (portNumber < 0 || portNumber > 65535) {
-				System.out.println("Invalid port number.\nPlease enter a port number between 0 and 65535.");
-				return;
-			}
-		}
-		catch(Exception e) {
-			//If entered value is not integer
+		//Verify port range
+		if (portNumber < 0 || portNumber > 65535) {
 			System.out.println("Invalid port number.\nPlease enter a port number between 0 and 65535.");
 			return;
 		}
@@ -234,64 +243,83 @@ public class Client  {
 		Client client = new Client(serverAddress, portNumber, null);
 
 
-		if(!client.start()) {
+		if(!client.start() || sessionKey == null || sessionKey.length == 0) {
+			//If Client instance fails to start or session key does not exist, return and exit
 			return;
 		}
 
 		//Loop forever
 		while(true) {
 			System.out.print("> ");
-			// read message from user
-			String msg = scan.nextLine();
-			// logout if message is LOGOUT
-			if(msg.equalsIgnoreCase("LOGOUT")) {
-				client.sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
-				// break to do the disconnect
-				break;
-			}
-			// message WhoIsIn
-			else if(msg.equalsIgnoreCase("WHOISIN")) {
-				client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));
-			}
-			else {				// default to ordinary message
-				client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
-			}
-		}
-		// done disconnect
-		client.disconnect();
-	}
+			final String inputMsg = scan.nextLine();
+			final String msg = inputMsg.trim();
 
-	/*
-	* a class that waits for the message from the server and append them to the JTextArea
-	* if we have a GUI or simply System.out.println() it in console mode
-	*/
+			if (msg.equalsIgnoreCase("/HELP")) {
+				//Shows the help menu when message is /LIST
+				System.out.println("\n\n[Welcome to PPAP Secure Chat]");
+				System.out.println("Below are a few commands to get you started.\n");
+				System.out.println("/help to show this help menu.");
+				System.out.println("/list to show all online users.");
+				System.out.println("/whisper [user] [message] to privately message an online user.");
+				System.out.println("/logout to logout from this server.");
+				System.out.println("To send a message to everyone, just type and press enter.\n\n");
+			} else if (msg.equalsIgnoreCase("/LIST")) {
+				//Show who is in when message is /LIST
+				client.sendMessage(new Message(Message.WHOISIN));
+			} else if ((msg.split("\\s+"))[0].equalsIgnoreCase("/WHISPER")) {
+				System.out.println("Whisper feature under construction");
+			} else if (msg.equalsIgnoreCase("/LOGOUT")) {
+				//Logout if message is /LOGOUT
+				client.sendMessage(new Message(Message.LOGOUT));
+				break;
+			} else {
+				//Sends input as message to everyone
+				final byte[] plaintext = Crypto.strToBytes(msg);
+				final AES ciphertext = Crypto.encrypt_AES(plaintext, sessionKey);
+				final byte[] signature = Crypto.sign_ECDSA(plaintext, clientECDSA.getPrivate());
+				client.sendMessage(new Message(Message.MESSAGE, ciphertext, signature));
+			}
+		} //While loop
+
+		//Close scanner and disconnect Client instance
+		scan.close();
+		client.disconnect();
+	} //Main
+
+	//Listens for messages from Server
 	class ListenFromServer extends Thread {
 
 		public void run() {
-
 			while (true) {
 				try {
-					String msg = (String) sInput.readObject();
-					// if console mode print the message and add back the prompt
-					if(cg == null) {
-						System.out.println(msg);
-						System.out.print("> ");
-					}
-					else {
-						cg.append(msg);
+					final Message m = (Message) sInput.readObject();
+
+					final byte[] plaintext = Crypto.decrypt_AES(m.getEncrypted(), sessionKey);
+					final boolean verifySig = Crypto.verify_ECDSA(plaintext, serverECDSA.getPublic(), m.getSignature());
+
+					if (verifySig) {
+						display(Crypto.bytesToStr(plaintext));
+
+						if(cg == null) {
+							//Console mode
+							System.out.print("> ");
+						}
+					} else {
+						//Signature verification of message failed
+						display("[Error] A message has been received but verification has failed. It might be tampered or corrupted.");
+						display("[Error] The chat server has been notified of this incident.");
 					}
 				} catch (IOException e) {
-					display("Server has close the connection: " + e);
+					display("Server has closed the connection.");
 					if (cg != null) {
 						cg.connectionFailed();
 					}
 					break;
 				} catch(ClassNotFoundException e2) {
-					// can't happen with a String object but need the catch anyhow
+					//Can't happen with a String object, catch for the sake of catching
 				}
-			}
-
+			} //While loop
 			return;
-		}
-	}
-}
+		} //run
+	} //Subclass ListenFromServer
+} //Class
