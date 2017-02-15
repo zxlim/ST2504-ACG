@@ -31,7 +31,7 @@ public class Credentials implements Serializable {
         this.ecdsaPub = ecdsaPub;
     }
 
-    //Username
+    //Encrypted Username
     protected byte[] getUsername(){
         return username;
     }
@@ -40,7 +40,7 @@ public class Credentials implements Serializable {
         this.username = username;
     }
 
-    //Password
+    //Encrypted Password
     protected byte[] getPassword(){
         return password;
     }
@@ -49,7 +49,7 @@ public class Credentials implements Serializable {
         this.password = password;
     }
 
-    //RSA Public
+    //Encrypted RSA Public Key
     protected byte[] getRsaPub(){
         return rsaPub;
     }
@@ -58,7 +58,7 @@ public class Credentials implements Serializable {
         this.rsaPub = rsaPub;
     }
 
-    //ECDSA Public Key
+    //Encrypted ECDSA Public Key
     protected byte[] getEcdsaPub(){
         return ecdsaPub;
     }
