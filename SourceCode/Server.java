@@ -314,9 +314,9 @@ public class Server {
 					//debug
 					System.out.println("Text file: " + password + "\nInput : " + pass);
 
-					byte[] salt = Crypto.strToBytes(line.substring(2,line.indexOf(":")));
+					byte[] salt = Crypto.base64ToBytes(line.substring(2,line.indexOf(":")));
 					byte[] hash = Crypto.pbkdf2(pass,salt);
-					String strHash = Crypto.bytesToStr(hash);
+					String strHash = Crypto.bytesToBase64(hash);
 
 					System.out.println("Text file: " + password + "\nInput : " + strHash);
 
