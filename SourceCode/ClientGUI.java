@@ -3,10 +3,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-
-/*
-* The Client with its GUI
-*/
 public class ClientGUI extends JFrame implements ActionListener {
 
 	private static final long serialVersionUID = 1L;
@@ -138,9 +134,11 @@ public class ClientGUI extends JFrame implements ActionListener {
 			return;
 		}
 
-
+		//Temporary disabled GUI login to prevent compile errors
 		if(o == login) {
-			// ok it is a connection request
+			JOptionPane.showMessageDialog(null, "GUI Login not yet supported. Please use 'java Client' instead of 'java ClientGUI'");
+			return;
+			/*// ok it is a connection request
 			String username = tf.getText().trim();
 			// empty username ignore it
 			if(username.length() == 0)
@@ -179,7 +177,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 			tfServer.setEditable(true);
 			tfPort.setEditable(true);
 			// Action listener for when the user enter a message
-			tf.addActionListener(this);
+			tf.addActionListener(this);*/
 		}
 
 	}
@@ -219,7 +217,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 			int result = JOptionPane.showConfirmDialog(frame, loginPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
 			if (result == JOptionPane.YES_OPTION) {
-				System.out.println(userInput.getText() + " : " + new String(pwInput.getPassword()));
+				System.out.println("[DEBUG] " + userInput.getText() + " : " + new String(pwInput.getPassword()));
 				return true;
 			} else {
 				return false;
