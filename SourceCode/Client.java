@@ -37,11 +37,10 @@ public class Client  {
 
 	//Attempt to connect to Server
 	public boolean start() {
-
 		try {
 			socket = new Socket(server, port);
 		} catch (Exception e) {
-			display("Error connectiong to server. Server might be down.");
+			display("Failed to connect to server. Server might be down.");
 			return false;
 		}
 
@@ -52,7 +51,7 @@ public class Client  {
 			sInput  = new ObjectInputStream(socket.getInputStream());
 			sOutput = new ObjectOutputStream(socket.getOutputStream());
 		} catch (IOException e) {
-			display("Exception creating new Input/output Streams: " + e);
+			display("[Error] Exception creating new Input/output Streams: " + e);
 			return false;
 		}
 
@@ -66,7 +65,7 @@ public class Client  {
 				//Send account credentials
 				sOutput.writeObject(userAccount);
 			} catch (Exception e) {
-				display("[Error] Unable to login to server. Please try again.");
+				display("Unable to login to server. Please try again.");
 				return false;
 			}
 		}
@@ -85,7 +84,7 @@ public class Client  {
 				return false;
 			}
 		} catch (Exception e) {
-			display("[Error] Unable to login to server. Please try again.");
+			display("Unable to login to server. Please try again.");
 			return false;
 		}
 
@@ -101,7 +100,7 @@ public class Client  {
 				return false;
 			}
 		} catch (Exception e) {
-			display("[Error] Exception while establishing secure connection:\n" + e);
+			display("[Error] Failed to establish a secure connection.");
 			return false;
 		}
 
@@ -110,7 +109,7 @@ public class Client  {
 
 		//Connection successful
 		return true;
-	}
+	} //start
 
 	//Login
 	private Credentials login() {
@@ -129,7 +128,7 @@ public class Client  {
 				return null;
 			}
 
-			System.out.println("[DEBUG] Password is: " + password);
+			System.out.println("Logging in...");
 
 			final byte[] encUsername = Crypto.encrypt_RSA(Crypto.strToBytes(userName), serverRSA.getPublic());
 			final byte[] encPassword = Crypto.encrypt_RSA(Crypto.strToBytes(password), serverRSA.getPublic());
@@ -141,15 +140,14 @@ public class Client  {
 			final byte[] encRSA = Crypto.encrypt_RSA(clientRSA.getPubBytes(), serverRSA.getPublic());
 			final byte[] encECDSA = Crypto.encrypt_RSA(clientECDSA.getPubBytes(), serverRSA.getPublic());
 
-			System.out.println("[DEBUG] Encrypted all info.");
-
 			return new Credentials(encUsername, encPassword, encRSA, encECDSA);
 		} else {
+			//GUI mode
 			//Temporary only
 			display("GUI Login not yet supported. Please use 'java Client' instead of 'java ClientGUI'");
 			return null;
 		}
-	}
+	} //login
 
 	//Exchange session encryption information and encrypt session
 	private boolean encryptConnection() {
@@ -158,54 +156,68 @@ public class Client  {
 			//To be completed. Client-Server encryption process and handshake in here.
 			return false;
 		} catch (Exception e) {
-			display("[Error] Exception while establishing secure connection:\n" + e);
+			display("[Error] Failed to establish a secure connection.");
 			return false;
 		}
-	}
+	} //encryptConnection
 
 	//Print string
 	private void display(String msg) {
 		if(cg == null) {
-			//Console
+			//Console mode
 			System.out.println(msg);
 		} else {
-			//GUI
+			//GUI mode
 			cg.append(msg + "\n");
 		}
-	}
+	} //display
 
-	//Send message to Server
-	void sendMessage(Message msg) {
+	//Send message to Server (Console mode)
+	void sendMessage(final Message msg) {
 		try {
 			sOutput.writeObject(msg);
+		} catch (IOException e) {
+			display("Exception writing to server: " + e);
+		}
+	} //sendMessage
+
+	//Send message to Server (GUI mode)
+	void sendMessageGUI(final String msg) {
+
+		final byte[] plaintext = Crypto.strToBytes(msg);
+		final AES ciphertext = Crypto.encrypt_AES(plaintext, sessionKey);
+		final byte[] signature = Crypto.sign_ECDSA(plaintext, clientECDSA.getPrivate());
+
+		try {
+			sOutput.writeObject(new Message(Message.MESSAGE, ciphertext, signature));
 		} catch(IOException e) {
 			display("Exception writing to server: " + e);
 		}
-	}
+	} //sendMessageGUI
 
 	//Close I/O Streams and Socket to disconnect Client
 	private void disconnect() {
 		try {
-			if(sInput != null) sInput.close();
-		} catch(Exception e) {
-			//
+			if (sInput != null) sInput.close();
+		} catch (Exception e) {
+			//ggwp
 		}
 		try {
-			if(sOutput != null) sOutput.close();
-		} catch(Exception e) {
-			//
+			if (sOutput != null) sOutput.close();
+		} catch (Exception e) {
+			//ggwp
 		}
-		try{
-			if(socket != null) socket.close();
-		} catch(Exception e) {
-			//
+		try {
+			if (socket != null) socket.close();
+		} catch (Exception e) {
+			//ggwp
 		}
 
 		//Tell GUI client has disconnected
-		if(cg != null) {
+		if (cg != null) {
 			cg.connectionFailed();
 		}
-	}
+	} //disconnect
 
 	//Main method
 	public static void main(String[] args) {
@@ -221,17 +233,17 @@ public class Client  {
 		final String serverAddress = scan.nextLine();
 		//Get Server Port
 		System.out.print("Server Port: ");
-		portNumber = scan.nextInt();
+		final String portStr = scan.nextLine();
 
-		// try {
-		// 	//Parse port typed by user as integer
-		// 	portNumber = Integer.parseInt(portStr);
-		// }
-		// catch(NumberFormatException e) {
-		// 	//If entered value is not integer, return and exit
-		// 	System.out.println("Invalid port number.\nPlease enter a port number between 0 and 65535.");
-		// 	return;
-		// }
+		try {
+			//Parse port typed by user as integer
+			portNumber = Integer.parseInt(portStr);
+		}
+		catch(NumberFormatException e) {
+			//If entered value is not integer, return and exit
+			System.out.println("Invalid port number.\nPlease enter a port number between 0 and 65535.");
+			return;
+		}
 
 		//Verify port range
 		if (portNumber < 0 || portNumber > 65535) {
@@ -239,7 +251,7 @@ public class Client  {
 			return;
 		}
 
-		//Create a new Client instance
+		//Create a new Client instance (Console mode)
 		Client client = new Client(serverAddress, portNumber, null);
 
 
@@ -267,7 +279,7 @@ public class Client  {
 				//Show who is in when message is /LIST
 				client.sendMessage(new Message(Message.WHOISIN));
 			} else if ((msg.split("\\s+"))[0].equalsIgnoreCase("/WHISPER")) {
-				System.out.println("Whisper feature under construction");
+				System.out.println("Whisper feature is under construction");
 			} else if (msg.equalsIgnoreCase("/LOGOUT")) {
 				//Logout if message is /LOGOUT
 				client.sendMessage(new Message(Message.LOGOUT));
