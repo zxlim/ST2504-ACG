@@ -1,14 +1,14 @@
 import java.io.*;
 
 public class file {
-    public static void credentialWriter(String name, byte[] password) throws Exception {
+    public static void credentialWriter(String name, byte[] password, byte[] salt) throws Exception {
         File file = new File("file.txt");
 
         // creates a FileWriter Object
         FileWriter writer = new FileWriter(file, true);
 
         // Writes the content to the file
-        writer.write(name + ":" + password + System.getProperty( "line.separator" ));
+        writer.write(name + ":" + password + ":" + salt + System.getProperty( "line.separator" ));
         writer.flush();
         writer.close();
 

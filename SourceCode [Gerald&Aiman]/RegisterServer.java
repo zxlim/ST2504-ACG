@@ -39,8 +39,8 @@ public class RegisterServer{
         }
 
         //Encryption
-        byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("aeron"), publicKey);
-        byte[] password = Crypto.encrypt_RSA(Crypto.strToBytes("1234"), publicKey);
+        byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("zhao"), publicKey);
+        byte[] password = Crypto.encrypt_RSA(Crypto.strToBytes("1qwe#@!"), publicKey);
         //Name Decryption
         String name = Crypto.bytesToStr(Crypto.decrypt_RSA(username, privateKey));
         String passwd = Crypto.bytesToStr(Crypto.decrypt_RSA(password, privateKey));
@@ -49,7 +49,10 @@ public class RegisterServer{
         if (file.validateName(name) == 1) {
             System.out.println("Invalid Username");
         } else {
-            file.credentialWriter(name, password);
+
+            byte[] salt = Crypto.secureRand(32);
+            byte[] hashedpw = Crypto.pbkdf2(passwd, salt);
+            file.credentialWriter(name, password, salt);
             System.out.println("Username Valid");
         }
 
