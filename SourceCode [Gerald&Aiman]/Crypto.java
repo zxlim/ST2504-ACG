@@ -35,7 +35,7 @@ public class Crypto {
 	private static final char[] keystorePass = {'1', 'q', 'w', 'e', 'r' ,'$', '#', '@', '!'};
 
 	//Encryption functions
-	protected static AES encrypt_AES(final byte[] plaintext, final byte[] key) {
+	static AES encrypt_AES(final byte[] plaintext, final byte[] key) {
 		try {
 			final byte[] iv = generate_aesIV();
 			final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding", "SunJCE");
@@ -49,7 +49,7 @@ public class Crypto {
 		}
 	}
 
-	protected static byte[] encrypt_RSA(final byte[] plaintext, final PublicKey pubKey) {
+	static byte[] encrypt_RSA(final byte[] plaintext, final PublicKey pubKey) {
 		try {
 			final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "SunJCE");
 			cipher.init(Cipher.ENCRYPT_MODE, pubKey);
@@ -63,7 +63,7 @@ public class Crypto {
 	}
 
 	//Decryption functions
-	protected static byte[] decrypt_AES(final AES aesObj, final byte[] key) {
+	static byte[] decrypt_AES(final AES aesObj, final byte[] key) {
 		try {
 			final Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding", "SunJCE");
 			cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new IvParameterSpec(aesObj.getIV()));
@@ -76,7 +76,7 @@ public class Crypto {
 		}
 	}
 
-	protected static byte[] decrypt_RSA(final byte[] ciphertext, final PrivateKey privKey) {
+	static byte[] decrypt_RSA(final byte[] ciphertext, final PrivateKey privKey) {
 		try {
 			final Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding", "SunJCE");
 			cipher.init(Cipher.DECRYPT_MODE, privKey);
@@ -90,7 +90,7 @@ public class Crypto {
 	}
 
 	//Signing and verification functions
-	protected static byte[] sign_ECDSA(final byte[] input, final PrivateKey privKey) {
+	static byte[] sign_ECDSA(final byte[] input, final PrivateKey privKey) {
 		try {
 			final Signature ecdsa = Signature.getInstance("SHA384withECDSA", "SunEC");
 			ecdsa.initSign(privKey);
@@ -104,7 +104,7 @@ public class Crypto {
 		}
 	}
 
-	protected static boolean verify_ECDSA(final byte[] input, final PublicKey pubKey, final byte[] signature) {
+	static boolean verify_ECDSA(final byte[] input, final PublicKey pubKey, final byte[] signature) {
 		try {
 			final Signature ecdsa = Signature.getInstance("SHA384withECDSA", "SunEC");
 			ecdsa.initVerify(pubKey);
@@ -119,7 +119,7 @@ public class Crypto {
 	}
 
 	//Keystore functions
-	protected static PKI ksPublicKey(final String ksPath, final String alias) {
+	static PKI ksPublicKey(final String ksPath, final String alias) {
 		try {
 			final FileInputStream ksFile = new FileInputStream(ksPath);
 			final KeyStore keystore = KeyStore.getInstance("JKS");
@@ -143,7 +143,7 @@ public class Crypto {
 		}
 	}
 
-	protected static PKI ksPrivateKey(final String ksPath, final String alias) {
+	static PKI ksPrivateKey(final String ksPath, final String alias) {
 		try {
 			final FileInputStream ksFile = new FileInputStream(ksPath);
 			final KeyStore keystore = KeyStore.getInstance("JKS");
@@ -164,7 +164,7 @@ public class Crypto {
 	}
 
 	//Generators
-	protected static byte[] generate_aesKey() {
+	static byte[] generate_aesKey() {
 		try {
 			final KeyGenerator keygen = KeyGenerator.getInstance("AES", "SunJCE");
 			keygen.init(256, new SecureRandom());
@@ -177,7 +177,7 @@ public class Crypto {
 		}
 	}
 
-	protected static PKI generate_RSA() {
+	static PKI generate_RSA() {
 		try {
 			final KeyPairGenerator kpGen = KeyPairGenerator.getInstance("RSA", "SunRsaSign");
 			kpGen.initialize(3072);
@@ -191,7 +191,7 @@ public class Crypto {
 		}
 	}
 
-	protected static PKI generate_ECDSA() {
+	static PKI generate_ECDSA() {
 		try {
 			final KeyPairGenerator kpGen = KeyPairGenerator.getInstance("EC", "SunEC");
 			final ECGenParameterSpec kpGenParams = new ECGenParameterSpec("secp384r1");
@@ -216,7 +216,7 @@ public class Crypto {
 		}
 	}
 
-	protected static byte[] secureRand(final int length) {
+	static byte[] secureRand(final int length) {
 		//For password salts, use a minimum length of 16 (128-bit)
 		//Save the salt with base64 encoding
 		try {
@@ -234,7 +234,7 @@ public class Crypto {
 	}
 
 	//Hashing functions
-	protected static byte[] hash_sha384(final byte[] input) {
+	static byte[] hash_sha384(final byte[] input) {
 		try {
 			final MessageDigest hash = MessageDigest.getInstance("SHA-384");
 			hash.update(input);
@@ -247,7 +247,7 @@ public class Crypto {
 		}
 	}
 
-	protected static byte[] pbkdf2(final String input, final byte[] salt) throws Exception {
+	static byte[] pbkdf2(final String input, final byte[] salt) throws Exception {
 		//For password hashing
 		//Salt should be generated with secureRand method
 		try {
@@ -265,19 +265,19 @@ public class Crypto {
 	}
 
 	//Misc functions
-	protected static byte[] strToBytes(final String input) {
+	static byte[] strToBytes(final String input) {
 		return input.getBytes(Charset.forName("UTF-8"));
 	}
 
-	protected static String bytesToStr(final byte[] input) {
+	static String bytesToStr(final byte[] input) {
 		return new String(input);
 	}
 
-	protected static String bytesToBase64(final byte[] input) {
+	static String bytesToBase64(final byte[] input) {
 		return Base64.getEncoder().encodeToString(input);
 	}
 
-	protected static byte[] base64ToBytes(final String input) {
+	static byte[] base64ToBytes(final String input) {
 		return Base64.getDecoder().decode(input);
 	}
 } //class

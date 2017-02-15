@@ -32,38 +32,22 @@ public class Credentials implements Serializable {
     }
 
     //Encrypted Username
-    protected byte[] getUsername(){
+    byte[] getUsername(){
         return username;
     }
 
-    protected void setUsername(final byte[] username){
-        this.username = username;
-    }
-
     //Encrypted Password
-    protected byte[] getPassword(){
+    byte[] getPassword(){
         return password;
     }
 
-    protected void setPassword(final byte[] password){
-        this.password = password;
-    }
-
     //Encrypted RSA Public Key
-    protected byte[] getRsaPub(){
+    byte[] getRsaPub(){
         return rsaPub;
     }
 
-    protected void setRsaPub(final byte[] rsaPub){
-        this.rsaPub = rsaPub;
-    }
-
     //Encrypted ECDSA Public Key
-    protected byte[] getEcdsaPub(){
+    byte[] getEcdsaPub(){
         return ecdsaPub;
-    }
-
-    protected void setEcdsaPub(final byte[] ecdsaPub){
-        this.ecdsaPub = ecdsaPub;
     }
 } //Class

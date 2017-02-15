@@ -110,9 +110,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 		connected = false;
 	}
 
-	/*
-	* Button or JTextField clicked
-	*/
+	//Button Actions
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
 		// if it is the Logout button
@@ -182,7 +180,7 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 	}
 
-	// to start the whole thing the server
+	//Main method
 	public static void main(String[] args) {
 		final boolean check = login();
 		if (check) {
@@ -190,31 +188,39 @@ public class ClientGUI extends JFrame implements ActionListener {
 			new ClientGUI("localhost", 1500);
 		} else {
 			System.out.println("Fail");
-			System.exit(0);
 		}
 	}
 
+	//Login Frame
 	private static boolean login() {
 		try {
-			JFrame frame = new JFrame();
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame.setLocationRelativeTo( null );
-			frame.setVisible( true );
-			frame.setSize(500, 200);
+			// JFrame frame = new JFrame();
+			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			// frame.setLocationRelativeTo( null );
+			// frame.setVisible( true );
+			// frame.setSize(500, 400);
 
 			//Login Panel
-			JPanel loginPanel = new JPanel(new GridLayout(2,2));
+			JPanel loginPanel = new JPanel(new GridLayout(4,2));
 
-			JLabel userLabel = new JLabel("Username ");
+			JLabel userLabel = new JLabel("Username\t");
 			JTextField userInput = new JTextField(15);
-			JLabel pwLabel = new JLabel("Password ");
+			JLabel pwLabel = new JLabel("Password\t");
 			JPasswordField pwInput = new JPasswordField(15);
+			JLabel addrLabel = new JLabel("Server Address\t");
+			JTextField addrInput = new JTextField(15);
+			JLabel portLabel = new JLabel("Server Port\t");
+			JTextField portInput = new JTextField(15);
 			loginPanel.add(userLabel);
 			loginPanel.add(userInput);
 			loginPanel.add(pwLabel);
 			loginPanel.add(pwInput);
+			loginPanel.add(addrLabel);
+			loginPanel.add(addrInput);
+			loginPanel.add(portLabel);
+			loginPanel.add(portInput);
 
-			int result = JOptionPane.showConfirmDialog(frame, loginPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+			int result = JOptionPane.showConfirmDialog(null, loginPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
 			if (result == JOptionPane.YES_OPTION) {
 				System.out.println("[DEBUG] " + userInput.getText() + " : " + new String(pwInput.getPassword()));

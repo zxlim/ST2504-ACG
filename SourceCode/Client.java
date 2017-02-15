@@ -25,7 +25,7 @@ public class Client  {
 	private static PKI clientECDSA;
 	//Temporary keystore - Client will have its own keystore soon
 	private static final PKI serverRSA = Crypto.ksPublicKey("ServerKeyStore", "serverRSA");
-	//private static final PKI serverECDSA = Crypto.ksPublicKey("Client", "serverECDSA");
+	private static final PKI serverECDSA = Crypto.ksPublicKey("ServerKeyStore", "serverECDSA");
 	private static byte[] sessionKey;
 
 	//Constructor
@@ -62,18 +62,28 @@ public class Client  {
 
 		if (userAccount == null) {
 			return false;
+		} else {
+			//Send account credentials
+			sOutput.writeObject(userAccount);
 		}
 
-		//Send account credentials
-		//sOutput.writeObject(userAccount);
 		//Receive reply from server
-		//final boolean loginSuccess = (boolean) sInput.readObject();
+		final Message loginStatus = (Message) sInput.readObject();
+
+		if (!verify_ECDSA(loginStatus.getMessage(), serverECDSA.getPublic(), loginStatus.getSignature())) {
+			display("Login failed");
+			disconnect();
+			if(cg != null) {
+				cg.connectionFailed();
+			}
+			return false;
+		}
 
 		//Encrypt connection between Client and Server, handled by encryptConnection method
 		try {
 			if (!encryptConnection()) {
 				sOutput.writeObject("Unsecure"); //Temporary only
-				sendMessage(new ChatMessage(ChatMessage.LOGOUT, ""));
+				sendMessage(new ChatMessage(ChatMessage.LOGOUT));
 				disconnect();
 				if(cg != null) {
 					cg.connectionFailed();
