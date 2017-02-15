@@ -100,9 +100,8 @@ public class Client  {
 			//User input credentials
 			System.out.println("Please login to continue.\n");
 			System.out.print("Username: ");
-			Scanner loginScan = new Scanner(System.in);
-			final String userInput = loginScan.nextLine();
-			final String userName = userInput.trim();
+			final String userInput = scan.nextLine();
+			final String userName = userInput.trim(); //Remove any leading or trailing whitespace
 
 			final String password = new String(System.console().readPassword("Password: "));
 
