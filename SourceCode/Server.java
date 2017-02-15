@@ -193,7 +193,7 @@ public class Server {
 		// the Username of the Client
 		String username;
 		// the only type of message a will receive
-		ChatMessage cm;
+		Message cm;
 		// the date I connect
 		String date;
 		// initialisation for retrieving object
@@ -221,7 +221,7 @@ public class Server {
 				final byte[] decECDSA = Crypto.decrypt_RSA(encrypted.getEcdsaPub(),serverRSA.getPrivate());
 
 				//debug
-				System.out.println("Got all 4 items from client");
+				//System.out.println("Got all 4 items from client");
 
 				//compare credentials vs file
 				final String strUsername = Crypto.bytesToStr(decUsername);
@@ -233,11 +233,16 @@ public class Server {
 					if (auth){
 						//convert from bool to Str
 						String strAuth = String.valueOf(auth);
+						System.out.println(strAuth);
 						final byte[] signed = Crypto.sign_ECDSA(Crypto.strToBytes(strAuth), serverECDSA.getPrivate());
-						Message signedMsg = new Message(MESSAGE.LOGIN,Crypto.strToBytes(strAuth),signed);
+						Message signedMsg = new Message(Message.LOGIN,Crypto.strToBytes(strAuth),signed);
 						sOutput.writeObject(signedMsg);
 					} else {
-						display("Authentication failed");
+						String strAuth = String.valueOf(auth);
+						System.out.println(strAuth);
+						final byte[] signed = Crypto.sign_ECDSA(Crypto.strToBytes(strAuth), serverECDSA.getPrivate());
+						Message msg = new Message(Message.LOGIN,Crypto.strToBytes(strAuth),signed);
+						sOutput.writeObject(msg);
 					}
 				} catch (Exception e) {
 					System.err.println(e);
@@ -264,7 +269,7 @@ public class Server {
 			while(keepGoing) {
 				// read a String (which is an object)
 				try {
-					cm = (ChatMessage) sInput.readObject();
+					cm = (Message) sInput.readObject();
 				}
 				catch (IOException e) {
 					display(username + " Exception reading Streams: " + e);
@@ -274,19 +279,19 @@ public class Server {
 					break;
 				}
 				// the messaage part of the ChatMessage
-				String message = cm.getMessage();
+				byte[] message = cm.getMessage();
 
 				// Switch on the type of message receive
 				switch(cm.getType()) {
 
-					case ChatMessage.MESSAGE:
+					case Message.MESSAGE:
 					broadcast(username + ": " + message);
 					break;
-					case ChatMessage.LOGOUT:
+					case Message.LOGOUT:
 					display(username + " disconnected with a LOGOUT message.");
 					keepGoing = false;
 					break;
-					case ChatMessage.WHOISIN:
+					case Message.WHOISIN:
 					writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
 					// scan al the users connected
 					for(int i = 0; i < al.size(); ++i) {
@@ -311,15 +316,19 @@ public class Server {
 			while ((line = read.readLine()) != null) {
 				username = line.substring(0, line.indexOf(":"));
 				if (name.equals(username)) {
-					password = line.substring(1, line.indexOf(":"));
+					String[] info = line.split(":");
+					password = info[1];
+					//password = line.substring(line.indexOf(":"),line.indexOf("::"));
 					//debug
-					System.out.println("Text file: " + password + "\nInput : " + pass);
+					//System.out.println("Text file: " + password + "\nInput : " + pass);
 
-					byte[] salt = Crypto.base64ToBytes(line.substring(2,line.indexOf(":")));
+					byte[] salt = Crypto.base64ToBytes(info[2]);
 					byte[] hash = Crypto.pbkdf2(pass,salt);
+					//System.out.println("Hash :" + hash);
 					String strHash = Crypto.bytesToBase64(hash);
 
-					System.out.println("Text file: " + password + "\nInput : " + strHash);
+					//debug
+					//System.out.println("Text file: " + password + "\nInput : " + strHash);
 
 					if (strHash.equals(password)) {
 						return true;
