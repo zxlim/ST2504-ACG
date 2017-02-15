@@ -234,7 +234,8 @@ public class Server {
 						//convert from bool to Str
 						String strAuth = String.valueOf(auth);
 						final byte[] signed = Crypto.sign_ECDSA(Crypto.strToBytes(strAuth), serverECDSA.getPrivate());
-						sOutput.writeObject(signed);
+						Message signedMsg = new Message(MESSAGE.LOGIN,Crypto.strToBytes(strAuth),signed);
+						sOutput.writeObject(signedMsg);
 					} else {
 						display("Authentication failed");
 					}
