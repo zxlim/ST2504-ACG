@@ -67,7 +67,7 @@ public class newRegister {
 
       // Checking that both passwords that user entered matches
       if (password.equals(passwordCheck)){
-        JOptionPane.showMessageDialog(null,"User details successfully completed.\nCreating user account for user [" + username + "] \n\nPlease wait..");
+        JOptionPane.showMessageDialog(null,"User details successfully completed.\nCreating user account for user [" + username + "]...");
         passwordInput = true;
       } else {
         JOptionPane.showMessageDialog(null,"Your passwords did not match! Please try again.");
@@ -106,11 +106,9 @@ public class newRegister {
         byte[] passwordEncrypted = Crypto.encrypt_RSA(passwordInBytes, serverPubKey);
 
         // Creating Credentials Object and Setting details for new user
-        Credentials newUser = new Credentials();
-        Credentials.setUsername(usernameEncrypted);
-        Credentials.setPassword(passwordEncrypted);
+        Credentials newUser = new Credentials(usernameEncrypted, passwordEncrypted);
 
-        System.out.println("\n\nUser details processing done.\nEncrypted username: " + usernameEncrypted + "\nEncrypted password: " + passwordEncrypted + "");
+        System.out.println("\n\nUser details processing done.\nEncrypted username: " + newUser.getUsername() + "\nEncrypted password: " + newUser.getPassword() + "");
 
       }
 
