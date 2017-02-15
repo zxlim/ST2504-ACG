@@ -1,6 +1,5 @@
 
 import javax.swing.JOptionPane;
-import Crypto;
 /*
 **	[ST2504 Applied Cryptography Assignment]
 **	[Encrypted Chat Program]
@@ -45,14 +44,32 @@ try {
     System.exit(0);
   }
 
+  //reading from keystore
+  FileInputStream is = new FileInputStream("ServerKeyStore");
 
+  KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+  keystore.load(is, "1qwer$#@!".toCharArray());
+
+  String alias = "server";
+
+  Key key = keystore.getKey(alias, "1qwer$#@!".toCharArray());
+
+  if (key instanceof PrivateKey) {
+    
+      // Get certificate of public key
+      Certificate cert = keystore.getCertificate(alias);
+
+      // Get public key
+      PublicKey publicKey = cert.getPublicKey();
+
+      //converting String to Bytes
+      byte[] text = Crypto.strToBytes("hello");
+
+      //encrypt using public RSA
+      byte[] ciphertext = Crypto.encrypt_RSA(text, publicKey);
+
+      System.out.println(ciphertext);
 
 }
-
-  public static byte encryptData(String toEncrypt){
-    //encrypt user information with RSA
-
-
-  }
-
+}
 }
