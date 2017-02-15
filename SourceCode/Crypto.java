@@ -147,7 +147,6 @@ public class Crypto {
 		try {
 			final FileInputStream ksFile = new FileInputStream(keystore);
 			final KeyStore keystorePriv = KeyStore.getInstance(KeyStore.getDefaultType());
-			ksFile.close();
 
 			keystorePriv.load(ksFile, "1qwer$#@!".toCharArray());
 			final PrivateKey privKey = (PrivateKey) keystorePriv.getKey(alias, "1qwer$#@!".toCharArray());

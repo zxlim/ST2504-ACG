@@ -19,7 +19,8 @@ public class Server {
 	private int port;
 	// the boolean that will be turned of to stop the server
 	private boolean keepGoing;
-
+	//Server keystore
+	private static final PKI serverRSA = Crypto.ksPrivateKey("ServerKeyStore", "serverRSA");
 
 	/*
 	 *  server constructor that receive the port to listen to for connection as parameter
@@ -194,6 +195,7 @@ public class Server {
 		ChatMessage cm;
 		// the date I connect
 		String date;
+		// initialisation for retrieving object
 
 		// Constructore
 		ClientThread(Socket socket) {
@@ -207,9 +209,34 @@ public class Server {
 				// create output first
 				sOutput = new ObjectOutputStream(socket.getOutputStream());
 				sInput  = new ObjectInputStream(socket.getInputStream());
+				// read in Credentials Object
+				System.out.println("waiting");
+				Credentials encrypted = (Credentials) sInput.readObject();
+
+				final byte[] decUsername = Crypto.decrypt_RSA(encrypted.getUsername(), serverRSA.getPrivate());
+				final byte[] decPassword = Crypto.decrypt_RSA(encrypted.getPassword(), serverRSA.getPrivate());
+
+				final byte[] decRSA = Crypto.decrypt_RSA(encrypted.getRsaPub(),serverRSA.getPrivate());
+				final byte[] decECDSA = Crypto.decrypt_RSA(encrypted.getEcdsaPub(),serverRSA.getPrivate());
+
+				//debug
+				System.out.println("Got all 4 items from client");
+
+				//compare credentials vs file
+				/*Ready to code*/
+				boolean auth = true;
+
+				if (auth){
+					sOutput.writeObject(true);
+					/* send in session key*/
+					
+				} else {
+					display("Authentication failed");
+				}
+
 				// read the username
-				username = (String) sInput.readObject();
-				display(username + " just connected.");
+				// username = (String) sInput.readObject();
+				// display(username + " just connected.");
 			}
 			catch (IOException e) {
 				display("Exception creating new Input/output Streams: " + e);
