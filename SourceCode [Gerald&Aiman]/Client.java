@@ -208,8 +208,8 @@ public class Client  {
 				client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));
 			}
 			// message /whisper
-			else if(msg.equals("/whisper")){
-				
+			else if(msg.contains("/whisper")){
+
 			}
 			else {				// default to ordinary message
 				client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
