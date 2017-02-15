@@ -1,3 +1,12 @@
+/*
+**	[ST2504 Applied Cryptography Assignment]
+**	[Encrypted Chat Program]
+**
+**	Aeron Teo (P1500725)
+**	Aiman Abdul Rashid (P1529335)
+**	Gerald Peh (P1445972)
+**	Lim Zhao Xiang (P1529559)
+*/
 
 import java.net.*;
 import java.io.*;
@@ -13,23 +22,20 @@ public class Client  {
 	//Initialize Scanner instance
 	private static final Scanner scan = new Scanner(System.in);
 
-	//GUI
-	private ClientGUI cg;
-
-	//Server Address and Port
+	//Client instance variables
 	private String server;
 	private int port;
+	private ClientGUI cg;
 
-	//Encryption/ Handshake variables
+	//Encryption and Handshake variables
+	private static byte[] sessionKey;
 	private static PKI clientRSA;
 	private static PKI clientECDSA;
-	//Temporary keystore - Client will have its own keystore soon
-	private static final PKI serverRSA = Crypto.ksPublicKey("ServerKeyStore", "serverRSA");
-	private static final PKI serverECDSA = Crypto.ksPublicKey("ServerKeyStore", "serverECDSA");
-	private static byte[] sessionKey;
+	private static final PKI serverRSA = Crypto.ksPublicKey("Client.keystore", "serverRSA");
+	private static final PKI serverECDSA = Crypto.ksPublicKey("Client.keystore", "serverECDSA");
 
 	//Constructor
-	Client(String server, int port, ClientGUI cg) {
+	Client(final String server, final int port, final ClientGUI cg) {
 		this.server = server;
 		this.port = port;
 		this.cg = cg;
@@ -56,7 +62,7 @@ public class Client  {
 		}
 
 		//Get user credentials
-		Credentials userAccount = login();
+		final Credentials userAccount = login();
 
 		if (userAccount == null) {
 			return false;
@@ -76,12 +82,17 @@ public class Client  {
 			final boolean verifySig = Crypto.verify_ECDSA(loginStatus.getMessage(), serverECDSA.getPublic(), loginStatus.getSignature());
 
 			if (!verifySig) {
-				display("Invalid username or password. Please try again.");
-				disconnect();
-				if(cg != null) {
-					cg.connectionFailed();
-				}
+				display("Unable to login to server. Please try again.");
 				return false;
+			} else {
+				if (Crypto.bytesToStr(loginStatus.getMessage()).equals("False")) {
+					display("Invalid username or password. Please try again.");
+					disconnect();
+					if(cg != null) {
+						cg.connectionFailed();
+					}
+					return false;
+				}
 			}
 		} catch (Exception e) {
 			display("Unable to login to server. Please try again.");
@@ -91,7 +102,7 @@ public class Client  {
 		//Encrypt connection between Client and Server, handled by encryptConnection method
 		try {
 			if (!encryptConnection()) {
-				sendMessage(new Message(Message.LOGOUT));
+				sendMessage(new Message(Message.SECURITYLOGOUT));
 				disconnect();
 				if(cg != null) {
 					cg.connectionFailed();

@@ -13,6 +13,7 @@ import java.io.FileInputStream;
 import java.nio.charset.Charset;
 import java.security.cert.Certificate;
 import java.security.Key;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.KeyStore;
@@ -22,6 +23,7 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
 import java.security.spec.ECGenParameterSpec;
+import java.security.spec.X509EncodedKeySpec;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.PBEKeySpec;
@@ -118,24 +120,18 @@ public class Crypto {
 		}
 	}
 
-	//Keystore functions
+	//Keystore and Key-Related functions
 	static PKI ksPublicKey(final String ksPath, final String alias) {
 		try {
 			final FileInputStream ksFile = new FileInputStream(ksPath);
 			final KeyStore keystore = KeyStore.getInstance("JKS");
 			keystore.load(ksFile, keystorePass);
-			final Key key = keystore.getKey(alias, keystorePass);
 
 			if (ksFile != null) {
 				ksFile.close();
 			}
 
-			if (key instanceof PrivateKey) {
-				return new PKI(keystore.getCertificate(alias).getPublicKey());
-			} else {
-				//Shouldn't happen, if not it means something screwed up badly
-				return null;
-			}
+			return new PKI(keystore.getCertificate(alias).getPublicKey());
 		} catch (Exception e) {
 			System.out.println("Exception occured: " + e + "\n");
 			e.printStackTrace();
@@ -149,13 +145,33 @@ public class Crypto {
 			final KeyStore keystore = KeyStore.getInstance("JKS");
 			keystore.load(ksFile, keystorePass);
 
-			final PrivateKey privKey = (PrivateKey) keystore.getKey(alias, keystorePass);
-
 			if (ksFile != null) {
 				ksFile.close();
 			}
 
-			return new PKI(privKey);
+			return new PKI((PrivateKey) keystore.getKey(alias, keystorePass));
+		} catch (Exception e) {
+			System.out.println("Exception occured: " + e + "\n");
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	static PKI bytesToPublicRSA(final byte[] pubBytes) {
+		try {
+			PublicKey publicKey = KeyFactory.getInstance("RSA", "SunRsaSign").generatePublic(new X509EncodedKeySpec(pubBytes));
+			return new PKI(publicKey);
+		} catch (Exception e) {
+			System.out.println("Exception occured: " + e + "\n");
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	static PKI bytesToPublicECDSA(final byte[] pubBytes) {
+		try {
+			PublicKey publicKey = KeyFactory.getInstance("EC", "SunEC").generatePublic(new X509EncodedKeySpec(pubBytes));
+			return new PKI(publicKey);
 		} catch (Exception e) {
 			System.out.println("Exception occured: " + e + "\n");
 			e.printStackTrace();
@@ -247,7 +263,7 @@ public class Crypto {
 		}
 	}
 
-	static byte[] pbkdf2(final String input, final byte[] salt) throws Exception {
+	static byte[] pbkdf2(final String input, final byte[] salt) {
 		//For password hashing
 		//Salt should be generated with secureRand method
 		try {
@@ -266,18 +282,42 @@ public class Crypto {
 
 	//Misc functions
 	static byte[] strToBytes(final String input) {
-		return input.getBytes(Charset.forName("UTF-8"));
+		try {
+			return input.getBytes(Charset.forName("UTF-8"));
+		} catch (Exception e) {
+			System.out.println("Exception occured: " + e + "\n");
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	static String bytesToStr(final byte[] input) {
-		return new String(input);
+		try {
+			return new String(input);
+		} catch (Exception e) {
+			System.out.println("Exception occured: " + e + "\n");
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	static String bytesToBase64(final byte[] input) {
-		return Base64.getEncoder().encodeToString(input);
+		try {
+			return Base64.getEncoder().encodeToString(input);
+		} catch (Exception e) {
+			System.out.println("Exception occured: " + e + "\n");
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	static byte[] base64ToBytes(final String input) {
-		return Base64.getDecoder().decode(input);
+		try {
+			return Base64.getDecoder().decode(input);
+		} catch (Exception e) {
+			System.out.println("Exception occured: " + e + "\n");
+			e.printStackTrace();
+			return null;
+		}
 	}
 } //class

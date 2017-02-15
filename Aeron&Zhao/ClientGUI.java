@@ -1,3 +1,12 @@
+/*
+**	[ST2504 Applied Cryptography Assignment]
+**	[Encrypted Chat Program]
+**
+**	Aeron Teo (P1500725)
+**	Aiman Abdul Rashid (P1529335)
+**	Gerald Peh (P1445972)
+**	Lim Zhao Xiang (P1529559)
+*/
 
 import javax.swing.*;
 import java.awt.*;
