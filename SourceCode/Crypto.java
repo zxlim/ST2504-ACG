@@ -9,6 +9,9 @@
 */
 
 import java.util.Base64;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.Charset;
 import java.security.cert.Certificate;
@@ -31,6 +34,8 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 public class Crypto {
+
+	private static final char[] keystorePass = {'1', 'q', 'w', 'e', 'r' ,'$', '#', '@', '!'};
 
 	//Encryption functions
 	protected static AES encrypt_AES(final byte[] plaintext, final byte[] key) {
@@ -117,21 +122,19 @@ public class Crypto {
 	}
 
 	//Keystore functions
-	protected static PKI ksPublicKey(final String keystore, final String alias) {
+	protected static PKI ksPublicKey(final String ksPath, final String alias) {
 		try {
-			final FileInputStream ksFile = new FileInputStream(keystore);
-
-			final KeyStore keystorePub = KeyStore.getInstance(KeyStore.getDefaultType());
-			keystorePub.load(ksFile, "1qwer$#@!".toCharArray());
-			final Key key = keystorePub.getKey(alias, "1qwer$#@!".toCharArray());
+			final FileInputStream ksFile = new FileInputStream(ksPath);
+			final KeyStore keystore = KeyStore.getInstance("JKS");
+			keystore.load(ksFile, keystorePass);
+			final Key key = keystore.getKey(alias, keystorePass);
 
 			if (ksFile != null) {
 				ksFile.close();
 			}
 
 			if (key instanceof PrivateKey) {
-				final Certificate cert = keystorePub.getCertificate(alias);
-				return new PKI(cert.getPublicKey());
+				return new PKI(keystore.getCertificate(alias).getPublicKey());
 			} else {
 				//Shouldn't happen, if not it means something screwed up badly
 				return null;
@@ -143,13 +146,13 @@ public class Crypto {
 		}
 	}
 
-	protected static PKI ksPrivateKey(final String keystore, final String alias) {
+	protected static PKI ksPrivateKey(final String ksPath, final String alias) {
 		try {
-			final FileInputStream ksFile = new FileInputStream(keystore);
-			final KeyStore keystorePriv = KeyStore.getInstance(KeyStore.getDefaultType());
+			final FileInputStream ksFile = new FileInputStream(ksPath);
+			final KeyStore keystore = KeyStore.getInstance("JKS");
+			keystore.load(ksFile, keystorePass);
 
-			keystorePriv.load(ksFile, "1qwer$#@!".toCharArray());
-			final PrivateKey privKey = (PrivateKey) keystorePriv.getKey(alias, "1qwer$#@!".toCharArray());
+			final PrivateKey privKey = (PrivateKey) keystore.getKey(alias, keystorePass);
 
 			if (ksFile != null) {
 				ksFile.close();
@@ -216,7 +219,9 @@ public class Crypto {
 		}
 	}
 
-	private static byte[] secureRand(final int length) {
+	protected static byte[] secureRand(final int length) {
+		//For password salts, use a minimum length of 16 (128-bit)
+		//Save the salt with base64 encoding
 		try {
 			byte[] rand = new byte[length];
 			//SecureRandom generate = SecureRandom.getInstance("SHA1PRNG", "SUN"); //Force SUN SHA1PRNG implementation
@@ -232,19 +237,6 @@ public class Crypto {
 	}
 
 	//Hashing functions
-	protected static byte[] hash_sha512(final byte[] input) {
-		try {
-			final MessageDigest hash = MessageDigest.getInstance("SHA-512");
-			hash.update(input);
-
-			return hash.digest();
-		} catch (Exception e) {
-			System.out.println("Exception occured: " + e + "\n");
-			e.printStackTrace();
-			return null;
-		}
-	}
-
 	protected static byte[] hash_sha384(final byte[] input) {
 		try {
 			final MessageDigest hash = MessageDigest.getInstance("SHA-384");
@@ -258,13 +250,14 @@ public class Crypto {
 		}
 	}
 
-	protected static byte[] pbkdf2(final String input, final byte[] salt, final int length) throws Exception {
-		//final int length: set 512 for password hashes
+	protected static byte[] pbkdf2(final String input, final byte[] salt) throws Exception {
+		//For password hashing
+		//Salt should be generated with secureRand method
 		try {
 			final char[] inputChar = input.toCharArray();
 
-			final SecretKeyFactory key = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
-			final PBEKeySpec specification = new PBEKeySpec(inputChar, salt, 128000, length);
+			final SecretKeyFactory key = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA384");
+			final PBEKeySpec specification = new PBEKeySpec(inputChar, salt, 128000, 384);
 
 			return key.generateSecret(specification).getEncoded();
 		} catch (Exception e) {
@@ -272,6 +265,22 @@ public class Crypto {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	//Authentication
+	protected static boolean nameAuthentication(String name, byte[] pass) throws Exception {
+			FileReader file = new FileReader(new File("file.txt"));
+			BufferedReader read = new BufferedReader(file);
+			String line = read.readLine();
+			String username,password = null;
+			while ((line = read.readLine()) != null) {
+					username = line.substring(0, line.indexOf(":"));
+					password = line.substring(1, line.indexOf(":"));
+					if (name.equals(username) && pass.equals(password)) {
+							return true;
+					}
+			}
+			return false;
 	}
 
 	//Misc functions
@@ -285,5 +294,9 @@ public class Crypto {
 
 	protected static String bytesToBase64(final byte[] input) {
 		return Base64.getEncoder().encodeToString(input);
+	}
+
+	protected static byte[] base64ToBytes(final String input) {
+		return Base64.getDecoder().decode(input);
 	}
 } //class
