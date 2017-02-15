@@ -4,8 +4,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 /*
- * The server that can be run both as a console application or a GUI
- */
+* The server that can be run both as a console application or a GUI
+*/
 public class Server {
 	// a unique ID for each connection
 	private static int uniqueId;
@@ -24,9 +24,9 @@ public class Server {
 	private static final PKI serverECDSA = Crypto.ksPrivateKey("ServerKeyStore", "serverECDSA");
 
 	/*
-	 *  server constructor that receive the port to listen to for connection as parameter
-	 *  in console
-	 */
+	*  server constructor that receive the port to listen to for connection as parameter
+	*  in console
+	*/
 	public Server(int port) {
 		this(port, null);
 	}
@@ -59,7 +59,7 @@ public class Server {
 				Socket socket = serverSocket.accept();  	// accept connection
 				// if I was asked to stop
 				if(!keepGoing)
-					break;
+				break;
 				ClientThread t = new ClientThread(socket);  // make a thread of it
 				al.add(t);									// save it in the ArrayList
 				t.start();
@@ -70,9 +70,9 @@ public class Server {
 				for(int i = 0; i < al.size(); ++i) {
 					ClientThread tc = al.get(i);
 					try {
-					tc.sInput.close();
-					tc.sOutput.close();
-					tc.socket.close();
+						tc.sInput.close();
+						tc.sOutput.close();
+						tc.socket.close();
 					}
 					catch(IOException ioE) {
 						// not much I can do
@@ -85,13 +85,13 @@ public class Server {
 		}
 		// something went bad
 		catch (IOException e) {
-            String msg = sdf.format(new Date()) + " Exception on new ServerSocket: " + e + "\n";
+			String msg = sdf.format(new Date()) + " Exception on new ServerSocket: " + e + "\n";
 			display(msg);
 		}
 	}
-    /*
-     * For the GUI to stop the server
-     */
+	/*
+	* For the GUI to stop the server
+	*/
 	protected void stop() {
 		keepGoing = false;
 		// connect to myself as Client to exit statement
@@ -104,27 +104,27 @@ public class Server {
 		}
 	}
 	/*
-	 * Display an event (not a message) to the console or the GUI
-	 */
+	* Display an event (not a message) to the console or the GUI
+	*/
 	private void display(String msg) {
 		String time = sdf.format(new Date()) + " " + msg;
 		if(sg == null)
-			System.out.println(time);
+		System.out.println(time);
 		else
-			sg.appendEvent(time + "\n");
+		sg.appendEvent(time + "\n");
 	}
 	/*
-	 *  to broadcast a message to all Clients
-	 */
+	*  to broadcast a message to all Clients
+	*/
 	private synchronized void broadcast(String message) {
 		// add HH:mm:ss and \n to the message
 		String time = sdf.format(new Date());
 		String messageLf = time + " " + message + "\n";
 		// display message on console or GUI
 		if(sg == null)
-			System.out.print(messageLf);
+		System.out.print(messageLf);
 		else
-			sg.appendRoom(messageLf);     // append in the room window
+		sg.appendRoom(messageLf);     // append in the room window
 
 		// we loop in reverse order in case we would have to remove a Client
 		// because it has disconnected
@@ -152,29 +152,29 @@ public class Server {
 	}
 
 	/*
-	 *  To run as a console application just open a console window and:
-	 * > java Server
-	 * > java Server portNumber
-	 * If the port number is not specified 1500 is used
-	 */
+	*  To run as a console application just open a console window and:
+	* > java Server
+	* > java Server portNumber
+	* If the port number is not specified 1500 is used
+	*/
 	public static void main(String[] args) {
 		// start server on port 1500 unless a PortNumber is specified
 		int portNumber = 1500;
 		switch(args.length) {
 			case 1:
-				try {
-					portNumber = Integer.parseInt(args[0]);
-				}
-				catch(Exception e) {
-					System.out.println("Invalid port number.");
-					System.out.println("Usage is: > java Server [portNumber]");
-					return;
-				}
-			case 0:
-				break;
-			default:
+			try {
+				portNumber = Integer.parseInt(args[0]);
+			}
+			catch(Exception e) {
+				System.out.println("Invalid port number.");
 				System.out.println("Usage is: > java Server [portNumber]");
 				return;
+			}
+			case 0:
+			break;
+			default:
+			System.out.println("Usage is: > java Server [portNumber]");
+			return;
 
 		}
 		// create a server object and start it
@@ -225,18 +225,22 @@ public class Server {
 
 				//compare credentials vs file
 				final String strUsername = Crypto.bytesToStr(decUsername);
-				/*Ready to code*/
-				boolean auth = true;
+				final String strPassword = Crypto.bytesToStr(decPassword);
 
-				if (auth){
-					//convert from bool to Str
-					String strAuth = String.valueOf(auth);
-					final byte[] signed = Crypto.sign_ECDSA(Crypto.strToBytes(strAuth), serverECDSA.getPrivate());
-					sOutput.writeObject(signed);
-				} else {
-					display("Authentication failed");
+				//boolean auth = true;
+				try {
+					final boolean auth = nameAuthentication(strUsername,strPassword);
+					if (auth){
+						//convert from bool to Str
+						String strAuth = String.valueOf(auth);
+						final byte[] signed = Crypto.sign_ECDSA(Crypto.strToBytes(strAuth), serverECDSA.getPrivate());
+						sOutput.writeObject(signed);
+					} else {
+						display("Authentication failed");
+					}
+				} catch (Exception e) {
+					System.err.println(e);
 				}
-
 				// read the username
 				// username = (String) sInput.readObject();
 				// display(username + " just connected.");
@@ -249,7 +253,7 @@ public class Server {
 			// but I read a String, I am sure it will work
 			catch (ClassNotFoundException e) {
 			}
-            date = new Date().toString() + "\n";
+			date = new Date().toString() + "\n";
 		}
 
 		// what will run forever
@@ -274,14 +278,14 @@ public class Server {
 				// Switch on the type of message receive
 				switch(cm.getType()) {
 
-				case ChatMessage.MESSAGE:
+					case ChatMessage.MESSAGE:
 					broadcast(username + ": " + message);
 					break;
-				case ChatMessage.LOGOUT:
+					case ChatMessage.LOGOUT:
 					display(username + " disconnected with a LOGOUT message.");
 					keepGoing = false;
 					break;
-				case ChatMessage.WHOISIN:
+					case ChatMessage.WHOISIN:
 					writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
 					// scan al the users connected
 					for(int i = 0; i < al.size(); ++i) {
@@ -298,19 +302,32 @@ public class Server {
 		}
 
 		//Authentication
-		public boolean nameAuthentication(String name, byte[] pass) throws Exception {
-				FileReader file = new FileReader(new File("file.txt"));
-				BufferedReader read = new BufferedReader(file);
-				String line = read.readLine();
-				String username,password = null;
-				while ((line = read.readLine()) != null) {
-						username = line.substring(0, line.indexOf(":"));
-						password = line.substring(1, line.indexOf(":"));
-						if (name.equals(username) && pass.equals(password)) {
-								return true;
-						}
+		public boolean nameAuthentication(final String name,String pass) throws Exception {
+			FileReader file = new FileReader(new File("file.txt"));
+			BufferedReader read = new BufferedReader(file);
+			String line = read.readLine();
+			String username,password = null;
+			while ((line = read.readLine()) != null) {
+				username = line.substring(0, line.indexOf(":"));
+				if (name.equals(username)) {
+					password = line.substring(1, line.indexOf(":"));
+					//debug
+					System.out.println("Text file: " + password + "\nInput : " + pass);
+
+					byte[] salt = Crypto.strToBytes(line.substring(2,line.indexOf(":")));
+					byte[] hash = Crypto.pbkdf2(pass,salt);
+					String strHash = Crypto.bytesToStr(hash);
+
+					System.out.println("Text file: " + password + "\nInput : " + strHash);
+
+					if (strHash.equals(password)) {
+						return true;
+					} else {
+						return false;
+					}
 				}
-				return false;
+			}
+			return false;
 		}
 
 		// try to close everything
@@ -320,35 +337,35 @@ public class Server {
 				if(sOutput != null) sOutput.close();
 			}
 			catch(Exception e) {}
-			try {
-				if(sInput != null) sInput.close();
-			}
-			catch(Exception e) {};
-			try {
-				if(socket != null) socket.close();
-			}
-			catch (Exception e) {}
-		}
+				try {
+					if(sInput != null) sInput.close();
+				}
+				catch(Exception e) {};
+				try {
+					if(socket != null) socket.close();
+				}
+				catch (Exception e) {}
+				}
 
-		/*
-		 * Write a String to the Client output stream
-		 */
-		private boolean writeMsg(String msg) {
-			// if Client is still connected send the message to it
-			if(!socket.isConnected()) {
-				close();
-				return false;
+				/*
+				* Write a String to the Client output stream
+				*/
+				private boolean writeMsg(String msg) {
+					// if Client is still connected send the message to it
+					if(!socket.isConnected()) {
+						close();
+						return false;
+					}
+					// write the message to the stream
+					try {
+						sOutput.writeObject(msg);
+					}
+					// if an error occurs, do not abort just inform the user
+					catch(IOException e) {
+						display("Error sending message to " + username);
+						display(e.toString());
+					}
+					return true;
+				}
 			}
-			// write the message to the stream
-			try {
-				sOutput.writeObject(msg);
-			}
-			// if an error occurs, do not abort just inform the user
-			catch(IOException e) {
-				display("Error sending message to " + username);
-				display(e.toString());
-			}
-			return true;
 		}
-	}
-}
