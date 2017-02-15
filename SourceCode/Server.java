@@ -21,6 +21,7 @@ public class Server {
 	private boolean keepGoing;
 	//Server keystore
 	private static final PKI serverRSA = Crypto.ksPrivateKey("ServerKeyStore", "serverRSA");
+	private static final PKI serverECDSA = Crypto.ksPrivateKey("ServerKeyStore", "serverECDSA");
 
 	/*
 	 *  server constructor that receive the port to listen to for connection as parameter
@@ -223,14 +224,15 @@ public class Server {
 				System.out.println("Got all 4 items from client");
 
 				//compare credentials vs file
-				final String strUsername = bytesToStr(decUsername);
+				final String strUsername = Crypto.bytesToStr(decUsername);
 				/*Ready to code*/
 				boolean auth = true;
 
 				if (auth){
-					sOutput.writeObject(true);
-					/* send in session key*/
-
+					//convert from bool to Str
+					String strAuth = String.valueOf(auth);
+					final byte[] signed = Crypto.sign_ECDSA(Crypto.strToBytes(strAuth), serverECDSA.getPrivate());
+					sOutput.writeObject(signed);
 				} else {
 					display("Authentication failed");
 				}
@@ -296,7 +298,7 @@ public class Server {
 		}
 
 		//Authentication
-		public static boolean nameAuthentication(String name, byte[] pass) throws Exception {
+		public boolean nameAuthentication(String name, byte[] pass) throws Exception {
 				FileReader file = new FileReader(new File("file.txt"));
 				BufferedReader read = new BufferedReader(file);
 				String line = read.readLine();
