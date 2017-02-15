@@ -1,6 +1,6 @@
-aiman,1234567
-ben,2341231
-shibao,14332
-jason,1234213
-aeron,1342134
-
+//User's information
+aiman:[B@33e5ccce
+zhao:[B@33e5ccce
+gerald:[B@33e5ccce
+aeron:123123
+jason:[B@33e5ccce

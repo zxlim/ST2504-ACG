@@ -39,14 +39,19 @@ public class RegisterServer{
         }
 
         //Encryption
-        byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("aiman"), publicKey);
+        byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("aeron"), publicKey);
         byte[] password = Crypto.encrypt_RSA(Crypto.strToBytes("1234"), publicKey);
         //Name Decryption
         String name = Crypto.bytesToStr(Crypto.decrypt_RSA(username, privateKey));
         String passwd = Crypto.bytesToStr(Crypto.decrypt_RSA(password, privateKey));
         //System.out.println(passwd);
-        file.fileWriter(name, password);
 
+        if (file.validateName(name) == 1) {
+            System.out.println("Invalid Username");
+        } else {
+            file.credentialWriter(name, password);
+            System.out.println("Username Valid");
+        }
 
     }
 }
