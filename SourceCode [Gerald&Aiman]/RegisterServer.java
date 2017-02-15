@@ -5,6 +5,8 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
 
+import java.io.*;
+
 public class RegisterServer{
     public static void main(String[] args) throws Exception {
         /*
@@ -21,7 +23,7 @@ public class RegisterServer{
         FileInputStream is = new FileInputStream("ServerKeyStore");
         KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
         keystore.load(is, "1qwer$#@!".toCharArray());
-        String alias = "server";
+        String alias = "serverrsa";
         Key key = keystore.getKey(alias, "1qwer$#@!".toCharArray());
 
         if (key instanceof PrivateKey) {
@@ -39,11 +41,11 @@ public class RegisterServer{
         //Encryption
         byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("aiman"), publicKey);
         byte[] password = Crypto.encrypt_RSA(Crypto.strToBytes("1234"), publicKey);
-        System.out.println(username);
         //Name Decryption
         String name = Crypto.bytesToStr(Crypto.decrypt_RSA(username, privateKey));
         String passwd = Crypto.bytesToStr(Crypto.decrypt_RSA(password, privateKey));
-        System.out.println(name + passwd);
+        //System.out.println(passwd);
+        file.fileWriter(name, password);
 
 
     }
