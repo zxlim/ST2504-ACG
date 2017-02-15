@@ -1,7 +1,14 @@
+/*
+**	[ST2504 Applied Cryptography Assignment]
+**	[Encrypted Chat Program]
+**
+**	Aeron Teo (P1500725)
+**	Aiman Abdul Rashid (P1529335)
+**	Gerald Peh (P1445972)
+**	Lim Zhao Xiang (P1529559)
+*/
+
 import java.io.Serializable;
-import java.util.Base64;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 
 public class Credentials implements Serializable {
 
@@ -9,46 +16,54 @@ public class Credentials implements Serializable {
 
     private byte[] username;
     private byte[] password;
-    private byte[] RSApub;
-    private byte[] ECDSApub;
+    private byte[] rsaPub;
+    private byte[] ecdsaPub;
 
-    Credentials(byte[] username, byte[] password, byte[] RSApub, byte[] ECDSApub) {
+    Credentials(final byte[] username, final byte[] password) {
         this.username = username;
         this.password = password;
-        this.RSApub = RSApub;
-        this.ECDSApub = ECDSApub;
     }
+
+    Credentials(final byte[] username, final byte[] password, final byte[] rsaPub, final byte[] ecdsaPub) {
+        this.username = username;
+        this.password = password;
+        this.rsaPub = rsaPub;
+        this.ecdsaPub = ecdsaPub;
+    }
+
     //Username
     protected byte[] getUsername(){
         return username;
     }
 
-    protected void setUsername(byte[] username){
-        this.username=username;
+    protected void setUsername(final byte[] username){
+        this.username = username;
     }
+
     //Password
     protected byte[] getPassword(){
         return password;
     }
 
-    protected void setPassword(byte[] password){
-        this.password=password;
+    protected void setPassword(final byte[] password){
+        this.password = password;
     }
+
     //RSA Public
-    protected byte[] getRSApub(){
-        return RSApub;
+    protected byte[] getRsaPub(){
+        return rsaPub;
     }
 
-    protected void setRSApub(byte[] RSApub){
-        this.RSApub=RSApub;
-    }
-    //ECDSA Public
-    protected byte[] getECDSApub(){
-        return ECDSApub;
+    protected void setRsaPub(final byte[] rsaPub){
+        this.rsaPub = rsaPub;
     }
 
-    protected void setECDSApub(byte[] ECDSApub){
-        this.ECDSApub=ECDSApub;
+    //ECDSA Public Key
+    protected byte[] getEcdsaPub(){
+        return ecdsaPub;
     }
 
-}
+    protected void setEcdsaPub(final byte[] ecdsaPub){
+        this.ecdsaPub = ecdsaPub;
+    }
+} //Class
