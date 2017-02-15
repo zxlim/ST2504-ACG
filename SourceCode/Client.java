@@ -69,7 +69,7 @@ public class Client  {
 		//Receive reply from server
 		//final boolean loginSuccess = (boolean) sInput.readObject();
 
-		//Encrypt connection between Client and Server
+		//Encrypt connection between Client and Server, handled by encryptConnection method
 		try {
 			if (!encryptConnection()) {
 				sOutput.writeObject("Unsecure"); //Temporary only
@@ -105,12 +105,12 @@ public class Client  {
 
 			final String password = new String(System.console().readPassword("Password: "));
 
-			System.out.println("[DEBUG] Password is: " + password);
-
 			if (userName == null || userName.isEmpty()) {
 				System.out.println("Username cannot be left empty.");
 				return null;
 			}
+
+			System.out.println("[DEBUG] Password is: " + password);
 
 			final byte[] encUsername = Crypto.encrypt_RSA(Crypto.strToBytes(userName), serverRSA.getPublic());
 			final byte[] encPassword = Crypto.encrypt_RSA(Crypto.strToBytes(password), serverRSA.getPublic());
@@ -122,6 +122,8 @@ public class Client  {
 			final byte[] encRSA = Crypto.encrypt_RSA(clientRSA.getPubBytes(), serverRSA.getPublic());
 			final byte[] encECDSA = Crypto.encrypt_RSA(clientECDSA.getPubBytes(), serverRSA.getPublic());
 
+			System.out.println("[DEBUG] Encrypted all info.");
+
 			return new Credentials(encUsername, encPassword, encRSA, encECDSA);
 		} else {
 			//Temporary only
@@ -130,6 +132,7 @@ public class Client  {
 		}
 	}
 
+	//Exchange session encryption information and encrypt session
 	private boolean encryptConnection() {
 		try {
 			display("Securing connection with server...");
