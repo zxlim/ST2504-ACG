@@ -5,6 +5,9 @@ import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
+import java.net.*;
+import java.io.*;
+import java.util.*;
 import Crypto;
 
 public class test {
@@ -47,5 +50,18 @@ public class test {
             //PrivateKey privateKey = keyPair.getPrivate();
 
         }
+
+        System.out.print("Please input the command /whisper [username] [message]");
+
+        Scanner scan = new Scanner(System.in);
+        String msg = scan.nextLine();
+
+        System.out.print("")
+
+
+
+
+
+
     }
 }

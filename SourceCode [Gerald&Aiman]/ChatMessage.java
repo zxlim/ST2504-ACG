@@ -14,7 +14,7 @@ public class ChatMessage implements Serializable {
 	// WHOISIN to receive the list of the users connected
 	// MESSAGE an ordinary message
 	// LOGOUT to disconnect from the Server
-	static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2;
+	static final int WHOISIN = 0, MESSAGE = 1, LOGOUT = 2; WHISPER = 3;
 	private int type;
 	private String message;
 

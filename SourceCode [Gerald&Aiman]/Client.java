@@ -207,6 +207,10 @@ public class Client  {
 			else if(msg.equalsIgnoreCase("WHOISIN")) {
 				client.sendMessage(new ChatMessage(ChatMessage.WHOISIN, ""));
 			}
+			// message /whisper
+			else if(msg.equals("/whisper")){
+				
+			}
 			else {				// default to ordinary message
 				client.sendMessage(new ChatMessage(ChatMessage.MESSAGE, msg));
 			}

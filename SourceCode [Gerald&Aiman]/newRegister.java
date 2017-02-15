@@ -75,6 +75,7 @@ public class newRegister {
     } else {
         JOptionPane.showMessageDialog(null,"Your password did not meet the requirements. Please try again.");
     }
+    
     } while (!passwordInput);
 
     System.out.println("User details successfully completed.\nProcessing details now.. please wait.");
