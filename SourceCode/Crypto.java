@@ -9,9 +9,6 @@
 */
 
 import java.util.Base64;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.File;
 import java.io.FileInputStream;
 import java.nio.charset.Charset;
 import java.security.cert.Certificate;
@@ -265,22 +262,6 @@ public class Crypto {
 			e.printStackTrace();
 			return null;
 		}
-	}
-
-	//Authentication
-	protected static boolean nameAuthentication(String name, byte[] pass) throws Exception {
-			FileReader file = new FileReader(new File("file.txt"));
-			BufferedReader read = new BufferedReader(file);
-			String line = read.readLine();
-			String username,password = null;
-			while ((line = read.readLine()) != null) {
-					username = line.substring(0, line.indexOf(":"));
-					password = line.substring(1, line.indexOf(":"));
-					if (name.equals(username) && pass.equals(password)) {
-							return true;
-					}
-			}
-			return false;
 	}
 
 	//Misc functions

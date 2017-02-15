@@ -223,13 +223,14 @@ public class Server {
 				System.out.println("Got all 4 items from client");
 
 				//compare credentials vs file
+				final String strUsername = bytesToStr(decUsername);
 				/*Ready to code*/
 				boolean auth = true;
 
 				if (auth){
 					sOutput.writeObject(true);
 					/* send in session key*/
-					
+
 				} else {
 					display("Authentication failed");
 				}
@@ -292,6 +293,22 @@ public class Server {
 			// connected Clients
 			remove(id);
 			close();
+		}
+
+		//Authentication
+		public static boolean nameAuthentication(String name, byte[] pass) throws Exception {
+				FileReader file = new FileReader(new File("file.txt"));
+				BufferedReader read = new BufferedReader(file);
+				String line = read.readLine();
+				String username,password = null;
+				while ((line = read.readLine()) != null) {
+						username = line.substring(0, line.indexOf(":"));
+						password = line.substring(1, line.indexOf(":"));
+						if (name.equals(username) && pass.equals(password)) {
+								return true;
+						}
+				}
+				return false;
 		}
 
 		// try to close everything
