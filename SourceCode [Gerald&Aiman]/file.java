@@ -1,7 +1,7 @@
 import java.io.*;
 
 public class file {
-    public static void credentialWriter(String name, byte[] password, byte[] salt) throws Exception {
+    public static void credentialWriter(String name, String password, String salt) throws Exception {
         File file = new File("file.txt");
 
         // creates a FileWriter Object
