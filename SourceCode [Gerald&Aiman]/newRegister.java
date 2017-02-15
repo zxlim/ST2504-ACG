@@ -11,7 +11,7 @@ import Crypto;
 **	Lim Zhao Xiang (P1529559)
 */
 
-public class newRegister{
+public class newRegister {
 
 
   public static void main(String[] args){
@@ -50,7 +50,7 @@ try {
 }
 
   public static byte encryptData(String toEncrypt){
-    //encrypt details with RSA
+    //encrypt user information with RSA
 
 
   }
