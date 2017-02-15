@@ -1,5 +1,12 @@
 
 import javax.swing.JOptionPane;
+import java.io.FileInputStream;
+import java.security.Key;
+//import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.cert.Certificate;
 /*
 **	[ST2504 Applied Cryptography Assignment]
 **	[Encrypted Chat Program]
@@ -14,35 +21,63 @@ public class newRegister {
 
 
   public static void main(String[] args){
-    int option =  JOptionPane.showConfirmDialog(null, "This program is used to REGISTER new users ONLY.\nPlease exit this program if you are an existing user or already have an account.\nHit CANCEL to exit.\n\n","Create an account",JOptionPane.OK_CANCEL_OPTION);
+    int option =  JOptionPane.showConfirmDialog(null, "This program is used to register new users only.\nPlease exit this program if you are an existing user or already have an account.\n\t\tHit CANCEL to exit.\n\n","Create an account",JOptionPane.OK_CANCEL_OPTION);
+    boolean usernameInput = false;
+    boolean passwordInput = false;
+    String username;
+    String password;
+    byte[] usernameRSA;
+    byte[] passwordRSA;
 
-try {
-    // Checking to continue registering new user
-    if (option == JOptionPane.CANCEL_OPTION){
-      System.exit(0);
-    }
+    try {
+        // Checking to continue registering new user
+        if (option == JOptionPane.CANCEL_OPTION){
+          System.exit(0);
+        }
 
-    String username = JOptionPane.showInputDialog(null,"Please enter your new username.");
+    //username input loop
+    do {
+        username = JOptionPane.showInputDialog(null,"Please enter your new username.\nNOTE \t : \t are not allowed.");
 
-    if (username.equals("") || username == null){
-      JOptionPane.showMessageDialog(null,"Error! You did not enter a username. Please try again.");
-      System.exit(0);
-    }
+        if (username.equals("") || username == null){
+          JOptionPane.showMessageDialog(null,"You did not enter a username. Please try again.");
+        } else if (username.contains(":")) {
+          JOptionPane.showMessageDialog(null,"A \":\" has been detected in your username. Please try again.");
+        } else {
+          usernameInput = true;
+        }
 
-    String password = JOptionPane.showInputDialog(null,"Please enter your new password.");
+      } while (!usernameInput);
 
-    String passwordCheck = JOptionPane.showInputDialog(null,"Please enter your new password again.");
+    //password input loop
+    do {
+      password = JOptionPane.showInputDialog(null,"Please enter your new password.\nNOTE that passwords have to meet the following requirements:\n - The password should contain at least one uppercase and lowercase character\n - The password should have at least one digit (0-9)\n - The password should be at least six characters long");
 
-    if (password.equals(passwordCheck)){
-      JOptionPane.showMessageDialog(null,"Your account \'" + username +  "\' has been successfully created!");
+    // Password complexity check
+      // The password should be more than 6 characters long
+      // The password should contain at least one uppercase and one lowercase character
+      // The password should contain at least one digit
+      if ((password.length() >= 6) &&
+          (password.matches(".*[a-z]+.*")) &&
+          (password.matches(".*[A-Z]+.*")) &&
+          (password.matches(".*[0-9]+.*"))) {
+
+      //input for password check
+      String passwordCheck = JOptionPane.showInputDialog(null,"Please enter your new password again.");
+
+      //checking that both passwords that user entered matches
+      if (password.equals(passwordCheck)){
+        JOptionPane.showMessageDialog(null,"User details successfully completed.\nCreating user account for user [" + username + "] \n\nPlease wait..");
+        passwordInput = true;
+      } else {
+        JOptionPane.showMessageDialog(null,"Your passwords did not match! Please try again.");
+      }
     } else {
-      JOptionPane.showMessageDialog(null,"Your passwords did not match! Please try again.");
+        JOptionPane.showMessageDialog(null,"Your password did not meet the requirements. Please try again.");
     }
+    } while (!passwordInput);
 
-  } catch(Exception e){
-    System.out.print("Error occured!\n[" + e + "]\nProgram will exit.");
-    System.exit(0);
-  }
+System.out.println("User details successfully completed.\nProcessing details now.. please wait.");
 
   //reading from keystore
   FileInputStream is = new FileInputStream("ServerKeyStore");
@@ -50,26 +85,35 @@ try {
   KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
   keystore.load(is, "1qwer$#@!".toCharArray());
 
-  String alias = "server";
+  String alias = "serverrsa";
 
   Key key = keystore.getKey(alias, "1qwer$#@!".toCharArray());
 
   if (key instanceof PrivateKey) {
-    
+
       // Get certificate of public key
       Certificate cert = keystore.getCertificate(alias);
 
-      // Get public key
-      PublicKey publicKey = cert.getPublicKey();
+      // Get servers' public key
+      PublicKey serverPubKey = cert.getPublicKey();
 
       //converting String to Bytes
-      byte[] text = Crypto.strToBytes("hello");
+      byte[] usernameInBytes = Crypto.strToBytes(username);
+      byte[] passwordInBytes = Crypto.strToBytes(password);
+
 
       //encrypt using public RSA
-      byte[] ciphertext = Crypto.encrypt_RSA(text, publicKey);
+      byte[] usernameEncrypted = Crypto.encrypt_RSA(usernameInBytes, serverPubKey);
+      byte[] passwordEncrypted = Crypto.encrypt_RSA(passwordInBytes, serverPubKey);
 
-      System.out.println(ciphertext);
+      System.out.println("\n\nUser details processing done.\nEncrypted username: " + usernameEncrypted + "\nEncrypted password: " + passwordEncrypted + "");
 
 }
+
+} catch (Exception e) {
+  System.out.print("Error occured while processing user details! [" + e + "]\nProgram will exit.");
+  System.exit(0);
+}
+
 }
 }
