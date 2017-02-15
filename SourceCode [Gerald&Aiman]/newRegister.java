@@ -35,7 +35,7 @@ public class newRegister {
           System.exit(0);
         }
 
-    //username input loop
+    // Username input loop
     do {
         username = JOptionPane.showInputDialog(null,"Please enter your new username.\nNOTE \t : \t are not allowed.");
 
@@ -49,7 +49,7 @@ public class newRegister {
 
       } while (!usernameInput);
 
-    //password input loop
+    // Password input loop
     do {
       password = JOptionPane.showInputDialog(null,"Please enter your new password.\nNOTE that passwords have to meet the following requirements:\n - The password should contain at least one uppercase and lowercase character\n - The password should have at least one digit (0-9)\n - The password should be at least six characters long");
 
@@ -62,10 +62,10 @@ public class newRegister {
           (password.matches(".*[A-Z]+.*")) &&
           (password.matches(".*[0-9]+.*"))) {
 
-      //input for password check
+      // Input for password check
       String passwordCheck = JOptionPane.showInputDialog(null,"Please enter your new password again.");
 
-      //checking that both passwords that user entered matches
+      // Checking that both passwords that user entered matches
       if (password.equals(passwordCheck)){
         JOptionPane.showMessageDialog(null,"User details successfully completed.\nCreating user account for user [" + username + "] \n\nPlease wait..");
         passwordInput = true;
@@ -77,43 +77,47 @@ public class newRegister {
     }
     } while (!passwordInput);
 
-System.out.println("User details successfully completed.\nProcessing details now.. please wait.");
+    System.out.println("User details successfully completed.\nProcessing details now.. please wait.");
 
-  //reading from keystore
-  FileInputStream is = new FileInputStream("ServerKeyStore");
+    // Reading from keystore
+    FileInputStream is = new FileInputStream("ServerKeyStore");
 
-  KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-  keystore.load(is, "1qwer$#@!".toCharArray());
+    KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+    keystore.load(is, "1qwer$#@!".toCharArray());
 
-  String alias = "serverrsa";
+    String alias = "serverrsa";
 
-  Key key = keystore.getKey(alias, "1qwer$#@!".toCharArray());
+    Key key = keystore.getKey(alias, "1qwer$#@!".toCharArray());
 
-  if (key instanceof PrivateKey) {
+    if (key instanceof PrivateKey) {
 
-      // Get certificate of public key
-      Certificate cert = keystore.getCertificate(alias);
+        // Get certificate of public key
+        Certificate cert = keystore.getCertificate(alias);
 
-      // Get servers' public key
-      PublicKey serverPubKey = cert.getPublicKey();
+        // Get servers' public key
+        PublicKey serverPubKey = cert.getPublicKey();
 
-      //converting String to Bytes
-      byte[] usernameInBytes = Crypto.strToBytes(username);
-      byte[] passwordInBytes = Crypto.strToBytes(password);
+        // Converting String to Bytes
+        byte[] usernameInBytes = Crypto.strToBytes(username);
+        byte[] passwordInBytes = Crypto.strToBytes(password);
 
 
-      //encrypt using public RSA
-      byte[] usernameEncrypted = Crypto.encrypt_RSA(usernameInBytes, serverPubKey);
-      byte[] passwordEncrypted = Crypto.encrypt_RSA(passwordInBytes, serverPubKey);
+        // Encrypt using public RSA
+        byte[] usernameEncrypted = Crypto.encrypt_RSA(usernameInBytes, serverPubKey);
+        byte[] passwordEncrypted = Crypto.encrypt_RSA(passwordInBytes, serverPubKey);
 
-      System.out.println("\n\nUser details processing done.\nEncrypted username: " + usernameEncrypted + "\nEncrypted password: " + passwordEncrypted + "");
+        // Creating Credentials Object and Setting details for new user
+        Credentials newUser = Crendentials.setUsername(usernameEncrypted);
+        newUser = Crendentials.setPassword(passwordEncrypted);
 
-}
+        System.out.println("\n\nUser details processing done.\nEncrypted username: " + usernameEncrypted + "\nEncrypted password: " + passwordEncrypted + "");
 
-} catch (Exception e) {
-  System.out.print("Error occured while processing user details! [" + e + "]\nProgram will exit.");
-  System.exit(0);
-}
+      }
 
-}
-}
+    } catch (Exception e) {
+      System.out.print("Error occured while processing user details! [" + e + "]\nProgram will exit.");
+      System.exit(0);
+    }
+
+    }
+  }
