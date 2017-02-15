@@ -9,9 +9,13 @@
 */
 
 import java.util.Base64;
+import java.io.FileInputStream;
 import java.nio.charset.Charset;
+import java.security.cert.Certificate;
+import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -109,6 +113,54 @@ public class Crypto {
 			System.out.println("Exception occured: " + e + "\n");
 			e.printStackTrace();
 			return false;
+		}
+	}
+
+	//Keystore functions
+	protected static PKI ksPublicKey(final String keystore, final String alias) {
+		try {
+			final FileInputStream ksFile = new FileInputStream(keystore);
+
+			final KeyStore keystorePub = KeyStore.getInstance(KeyStore.getDefaultType());
+			keystorePub.load(ksFile, "1qwer$#@!".toCharArray());
+			final Key key = keystorePub.getKey(alias, "1qwer$#@!".toCharArray());
+
+			if (ksFile != null) {
+				ksFile.close();
+			}
+
+			if (key instanceof PrivateKey) {
+				final Certificate cert = keystorePub.getCertificate(alias);
+				return new PKI(cert.getPublicKey());
+			} else {
+				//Shouldn't happen, if not it means something screwed up badly
+				return null;
+			}
+		} catch (Exception e) {
+			System.out.println("Exception occured: " + e + "\n");
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	protected static PKI ksPrivateKey(final String keystore, final String alias) {
+		try {
+			final FileInputStream ksFile = new FileInputStream(keystore);
+			final KeyStore keystorePriv = KeyStore.getInstance(KeyStore.getDefaultType());
+			ksFile.close();
+
+			keystorePriv.load(ksFile, "1qwer$#@!".toCharArray());
+			final PrivateKey privKey = (PrivateKey) keystorePriv.getKey(alias, "1qwer$#@!".toCharArray());
+
+			if (ksFile != null) {
+				ksFile.close();
+			}
+
+			return new PKI(privKey);
+		} catch (Exception e) {
+			System.out.println("Exception occured: " + e + "\n");
+			e.printStackTrace();
+			return null;
 		}
 	}
 

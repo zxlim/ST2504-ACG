@@ -101,14 +101,14 @@ public class newRegister {
         byte[] usernameInBytes = Crypto.strToBytes(username);
         byte[] passwordInBytes = Crypto.strToBytes(password);
 
-
         // Encrypt using public RSA
         byte[] usernameEncrypted = Crypto.encrypt_RSA(usernameInBytes, serverPubKey);
         byte[] passwordEncrypted = Crypto.encrypt_RSA(passwordInBytes, serverPubKey);
 
         // Creating Credentials Object and Setting details for new user
-        Credentials newUser = Crendentials.setUsername(usernameEncrypted);
-        newUser = Crendentials.setPassword(passwordEncrypted);
+        Credentials newUser = new Credentials();
+        Credentials.setUsername(usernameEncrypted);
+        Credentials.setPassword(passwordEncrypted);
 
         System.out.println("\n\nUser details processing done.\nEncrypted username: " + usernameEncrypted + "\nEncrypted password: " + passwordEncrypted + "");
 

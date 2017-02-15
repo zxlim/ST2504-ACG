@@ -1,9 +1,11 @@
 /*
-**	AES Object for ACG Chat Program.
+**	[ST2504 Applied Cryptography Assignment]
+**	[Encrypted Chat Program]
 **
-**	Copyright (C) 2017.
-**	Written by Lim Zhao Xiang.
-**	For educational use only.
+**	Aeron Teo (P1500725)
+**	Aiman Abdul Rashid (P1529335)
+**	Gerald Peh (P1445972)
+**	Lim Zhao Xiang (P1529559)
 */
 
 import java.io.Serializable;
