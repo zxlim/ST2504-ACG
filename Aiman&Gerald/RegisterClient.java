@@ -4,7 +4,8 @@ import java.net.*;
 import java.io.*;
 import java.security.Key;
 import java.lang.*;
-
+import javax.swing.*;
+import java.awt.*;
 
 //import java.security.KeyPair;
 import java.security.KeyStore;
@@ -21,7 +22,7 @@ import java.security.cert.Certificate;
 **	Lim Zhao Xiang (P1529559)
 */
 
-public class newRegister {
+public class RegisterClient {
 
   // Server address and port
   private static String registServerAddress = "localhost";
@@ -30,6 +31,7 @@ public class newRegister {
   // For user details
   private static String username;
   private static String password;
+  private static String passwordChk;
   private static Credentials newUser;
 
   // for I/O
@@ -52,7 +54,7 @@ public class newRegister {
 
     try {
         // Checking to continue registering new user
-        if (option == JOptionPane.CANCEL_OPTION){
+        if (option != JOptionPane.YES_OPTION){
           System.exit(0);
         }
 
@@ -65,50 +67,61 @@ public class newRegister {
 
     System.out.print("Connecting to Registration Server IP " + registServerAddress + "\n");
 
-    // Username input loop
-    do {
-        username = JOptionPane.showInputDialog(null,"Please enter your new username.\nNOTE \t : \t are not allowed.");
 
-        if (username.equals("") || username == null){
-          username = "Gerald";
-          usernameInput = true;
-          //JOptionPane.showMessageDialog(null,"You did not enter a username. Please try again.");
-        } else if (username.contains(":")) {
-          JOptionPane.showMessageDialog(null,"A \":\" has been detected in your username. Please try again.");
+    //Login Panel
+    JPanel loginPanel = new JPanel(new GridLayout(3,2));
+
+    JLabel userLabel = new JLabel("Username\t");
+    JTextField userInput = new JTextField(15);
+    JLabel pwLabel = new JLabel("Password\t");
+    JPasswordField passwdInput = new JPasswordField(15);
+    JLabel pwChkLabel = new JLabel("Password again\t");
+    JPasswordField passwordChkInput = new JPasswordField(15);
+
+    loginPanel.add(userLabel);
+    loginPanel.add(userInput);
+    loginPanel.add(pwLabel);
+    loginPanel.add(passwdInput);
+    loginPanel.add(pwChkLabel);
+    loginPanel.add(passwordChkInput);
+
+
+    do {
+        int loginResult = JOptionPane.showConfirmDialog(null, loginPanel, "PPAP Chat Registration", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        if (loginResult == JOptionPane.YES_OPTION) {
+            username = userInput.getText().trim();
+            password = new String(passwdInput.getPassword());
+            passwordChk = new String(passwordChkInput.getPassword());
+
+            if (username.equals("") || username == null){
+              JOptionPane.showMessageDialog(null,"You did not enter a username. Please try again.");
+            } else if (username.contains(":")) {
+              JOptionPane.showMessageDialog(null,"A \":\" has been detected in your username. Please try again.");
+            } else {
+              usernameInput = true;
+              // Password complexity check
+              // The password should be more than 6 characters long
+              // The password should contain at least one uppercase and one lowercase character
+              // The password should contain at least one digit
+              if ((password.length() >= 6) &&
+              (password.matches(".*[a-z]+.*")) &&
+              (password.matches(".*[A-Z]+.*")) &&
+              (password.matches(".*[0-9]+.*"))) {
+                if (password.equals(passwordChk)){
+                  JOptionPane.showMessageDialog(null,"User details successfully completed.\nUser account creation for user [" + username + "] will commence.");
+                  passwordInput = true;
+                } else {
+                  JOptionPane.showMessageDialog(null,"Your passwords did not match! Please try again.");
+                }
+              } else {
+                JOptionPane.showMessageDialog(null,"Your password did not meet the requirements. \nNOTE that passwords have to meet the following requirements:\n - The password should contain at least one uppercase and lowercase character\n - The password should have at least one digit (0-9)\n - The password should be at least six characters long");
+              }
+            }
+
         } else {
-          usernameInput = true;
+          System.exit(0);
         }
-
-      } while (!usernameInput);
-
-    // Password input loop
-    do {
-      password = JOptionPane.showInputDialog(null,"Please enter your new password.\nNOTE that passwords have to meet the following requirements:\n - The password should contain at least one uppercase and lowercase character\n - The password should have at least one digit (0-9)\n - The password should be at least six characters long");
-
-    // Password complexity check
-      // The password should be more than 6 characters long
-      // The password should contain at least one uppercase and one lowercase character
-      // The password should contain at least one digit
-      if ((password.length() >= 6) &&
-          (password.matches(".*[a-z]+.*")) &&
-          (password.matches(".*[A-Z]+.*")) &&
-          (password.matches(".*[0-9]+.*"))) {
-
-      // Input for password check
-      String passwordCheck = JOptionPane.showInputDialog(null,"Please enter your new password again.");
-
-      // Checking that both passwords that user entered matches
-      if (password.equals(passwordCheck)){
-        JOptionPane.showMessageDialog(null,"User details successfully completed.\nUser account creation for user [" + username + "] will commence.");
-        passwordInput = true;
-      } else {
-        JOptionPane.showMessageDialog(null,"Your passwords did not match! Please try again.");
-      }
-    } else {
-        JOptionPane.showMessageDialog(null,"Your password did not meet the requirements. Please try again.");
-    }
-
-    } while (!passwordInput);
+    } while (!usernameInput || !passwordInput);
 
     System.out.println("User details successfully completed.\nProcessing details now.. please wait.");
 
@@ -159,7 +172,7 @@ public class newRegister {
           System.out.print("\nValidation failed. Your username is taken. Please use another username.\n");
           JOptionPane.showMessageDialog(null,"Your username is taken. Please use another username.\n");
         } else {
-          System.out.print("\nValidation passed.\n");
+          System.out.print("\nValidation passed.\nYou can now log in to the chat.\n");
           JOptionPane.showMessageDialog(null,"User registration complete. You can now log in to the chat.\n");
         }
 
@@ -231,6 +244,7 @@ public class newRegister {
           System.out.print("\nError with streams: " + eStream);
           System.exit(0);
         }
+      System.out.println("Waiting for server reply...");
       checkReturn = (String) sInput.readObject();
 
           if (checkReturn.equals("Success")){
