@@ -51,15 +51,17 @@ public class Client  {
 			socket = new Socket(server, port);
 		} catch (Exception e) {
 			if (cg == null) {
-				System.out.println("Failed to connect to server. Server might be down.");
+				System.out.println("Failed to connect to server. Please try again later.");
 			} else {
-				cg.displayDialog("Failed to connect to server. Server might be down");
+				cg.displayDialog("Failed to connect to server. Please try again later.");
 				cg.connectionFailed();
 			}
 			return false;
 		}
 
-		System.out.println("Connecting to server at " + socket.getInetAddress() + ":" + socket.getPort() + "...\n");
+		if (cg == null) {
+			System.out.println("Connecting to server at " + socket.getInetAddress() + ":" + socket.getPort() + "...\n");
+		}
 
 		//Create I/O Stream
 		try {
@@ -86,9 +88,9 @@ public class Client  {
 				sOutput.writeObject(userAccount);
 			} catch (Exception e) {
 				if (cg == null) {
-					System.out.println("Unable to login to server. Please try again.");
+					System.out.println("Unable to login to server. Please try again later.");
 				} else {
-					cg.displayDialog("Unable to login to server. Please try again");
+					cg.displayDialog("Unable to login to server. Please try again later.");
 					cg.connectionFailed();
 				}
 				return false;
@@ -102,9 +104,9 @@ public class Client  {
 
 			if (!verifySig) {
 				if (cg == null) {
-					System.out.println("Unable to login to server. Please try again.");
+					System.out.println("Unable to login to server. Please try again later.");
 				} else {
-					cg.displayDialog("Unable to login to server. Please try again");
+					cg.displayDialog("Unable to login to server. Please try again later.");
 				}
 				return false;
 			} else {
@@ -121,9 +123,9 @@ public class Client  {
 			}
 		} catch (Exception e) {
 			if (cg == null) {
-				System.out.println("Unable to login to server. Please try again.");
+				System.out.println("Unable to login to server. Please try again later.");
 			} else {
-				cg.displayDialog("Unable to login to server. Please try again");
+				cg.displayDialog("Unable to login to server. Please try again later.");
 			}
 			return false;
 		}
@@ -292,17 +294,17 @@ public class Client  {
 		try {
 			if (sInput != null) sInput.close();
 		} catch (Exception e) {
-			//ggwp
+			//ggwp ppap
 		}
 		try {
 			if (sOutput != null) sOutput.close();
 		} catch (Exception e) {
-			//ggwp
+			//ggwp ppap
 		}
 		try {
 			if (socket != null) socket.close();
 		} catch (Exception e) {
-			//ggwp
+			//ggwp ppap
 		}
 
 		//Tell GUI client has disconnected
@@ -356,7 +358,7 @@ public class Client  {
 
 		//Loop forever
 		while(true) {
-			System.out.print("> ");
+			System.out.print("Message: ");
 			final String inputMsg = scan.nextLine();
 			final String msg = inputMsg.trim();
 
@@ -373,6 +375,7 @@ public class Client  {
 				//Show who is in when message is /LIST
 				client.sendMessage(new Message(Message.WHOISIN));
 			} else if ((msg.split("\\s+"))[0].equalsIgnoreCase("/WHISPER")) {
+
 				System.out.println("Whisper feature is under construction");
 			} else if (msg.equalsIgnoreCase("/LOGOUT")) {
 				//Logout if message is /LOGOUT

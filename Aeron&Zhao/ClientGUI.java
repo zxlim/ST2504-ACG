@@ -15,20 +15,22 @@ import java.awt.event.*;
 public class ClientGUI extends JFrame implements ActionListener{
 
 	protected static final long serialVersionUID = 1112122200L;
-	// will hold "Enter message"
-	private JLabel label;
-	// to hold the Username and later on the messages
-	private JTextField tf;
-	// to hold the server address an the port number
-	private JTextField tfServer, tfPort;
-	// to Logout and get the list of the users
-	private JButton login, logout, whoIsIn;
-	// for the chat room
-	private JTextArea ta;
-	// if it is for connection
-	private boolean connected;
+	//Label for message input box
+	private JLabel messageLabel;
+	private JTextField messageField;
+
+	//Chat GUI Buttons
+	private JButton login, logout, whoIsIn, sendMsg, help;
+	//Chat GUI message display box
+	private JTextArea messageBox;
+
+	//Label to store username
+	private JLabel userDetails;
+
 	//Client instance
 	private Client client;
+	//Client instance connection
+	private boolean connected;
 
 	private String serverAddress, nameGUI, pwGUI;
 	private int serverPort;
@@ -43,32 +45,26 @@ public class ClientGUI extends JFrame implements ActionListener{
 		this.nameGUI = nameGUI;
 		this.pwGUI = pwGUI;
 
-		JPanel northPanel = new JPanel(new GridLayout(3,1));
-		JPanel serverAndPort = new JPanel(new GridLayout(1, 4, 1, 2));
-
-		serverAndPort.add(new JLabel("Server Address: " + serverAddress));
-		serverAndPort.add(new JLabel("Port Number: " + serverPort));
-		northPanel.add(serverAndPort);
-
-		// the Label and the TextField
-		label = new JLabel("Enter your message below", SwingConstants.CENTER);
-		northPanel.add(label);
-		tf = new JTextField("");
-		tf.setEditable(false);
-		tf.setBackground(Color.WHITE);
-		label.setVisible(false);
-		tf.setVisible(false);
-		northPanel.add(tf);
-		add(northPanel, BorderLayout.NORTH);
-
-		// The CenterPanel which is the chat room
-		ta = new JTextArea("Welcome to the Chat room\n", 80, 80);
+		//Different parts of the Chat GUI
+		JPanel topPanel = new JPanel(new GridLayout(5,1));
 		JPanel centerPanel = new JPanel(new GridLayout(1,1));
-		centerPanel.add(new JScrollPane(ta));
-		ta.setEditable(false);
-		add(centerPanel, BorderLayout.CENTER);
+		JPanel bottomPanel = new JPanel(new GridLayout(4,1));
+		topPanel.setBackground(Color.LIGHT_GRAY);
+		centerPanel.setBackground(Color.LIGHT_GRAY);
+		bottomPanel.setBackground(Color.LIGHT_GRAY);
 
-		// the 3 buttons
+		//Panel for Server Info
+		JPanel serverInfoPanel = new JPanel(new GridLayout(1, 2));
+		serverInfoPanel.setBackground(Color.LIGHT_GRAY);
+		serverInfoPanel.add(new JLabel("Server Address: " + serverAddress, SwingConstants.CENTER));
+		serverInfoPanel.add(new JLabel("Port Number: " + serverPort, SwingConstants.CENTER));
+
+		//User details label
+		userDetails = new JLabel("Logging in as user: " + nameGUI, SwingConstants.CENTER);
+
+		//Panel for buttons
+		JPanel buttonPanel = new JPanel(new GridLayout(1, 3));
+		buttonPanel.setBackground(Color.LIGHT_GRAY);
 		login = new JButton("Join Chat");
 		login.addActionListener(this);
 		logout = new JButton("Logout");
@@ -78,23 +74,68 @@ public class ClientGUI extends JFrame implements ActionListener{
 		whoIsIn.addActionListener(this);
 		whoIsIn.setEnabled(false);
 
-		JPanel southPanel = new JPanel();
-		southPanel.add(login);
-		southPanel.add(logout);
-		southPanel.add(whoIsIn);
-		add(southPanel, BorderLayout.SOUTH);
+		buttonPanel.add(login);
+		buttonPanel.add(logout);
+		buttonPanel.add(whoIsIn);
+
+		//Add the different parts to topPanel
+		topPanel.add(new JLabel("\n", SwingConstants.CENTER));
+		topPanel.add(serverInfoPanel);
+		topPanel.add(userDetails);
+		topPanel.add(new JLabel("\n", SwingConstants.CENTER));
+		topPanel.add(buttonPanel);
+
+		//Main Chat GUI with message box
+		messageBox = new JTextArea("  Ready to join chat.\n\n", 70, 70);
+		messageBox.setEditable(false);
+		messageBox.setLineWrap(true);
+		messageBox.setBackground(Color.WHITE);
+		JScrollPane messageBoxScroll = new JScrollPane(messageBox);
+		messageBoxScroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		centerPanel.add(messageBoxScroll);
+
+		//Message box
+		messageLabel = new JLabel("Enter your message below", SwingConstants.CENTER);
+		messageLabel.setVisible(false);
+		messageField = new JTextField("");
+		messageField.setEditable(false);
+		messageField.setBackground(Color.WHITE);
+		messageField.setVisible(false);
+
+		//Button to send chat message
+		JPanel btmBtnPanel = new JPanel(new GridLayout(1, 2));
+		btmBtnPanel.setBackground(Color.LIGHT_GRAY);
+		sendMsg = new JButton("Send Message");
+		sendMsg.addActionListener(this);
+		sendMsg.setEnabled(false);
+		sendMsg.setVisible(false);
+		help = new JButton("Help");
+		help.addActionListener(this);
+		help.setEnabled(false);
+		help.setVisible(false);
+		btmBtnPanel.add(sendMsg);
+		btmBtnPanel.add(help);
+
+		bottomPanel.add(messageLabel);
+		bottomPanel.add(messageField);
+		bottomPanel.add(btmBtnPanel);
+		bottomPanel.add(new JLabel("\n", SwingConstants.CENTER));
+
+		//Add the different panels to frame
+		add(topPanel, BorderLayout.NORTH);
+		add(centerPanel, BorderLayout.CENTER);
+		add(bottomPanel, BorderLayout.SOUTH);
 
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setSize(600, 600);
 		setVisible(true);
-		tf.requestFocus();
-
+		login.requestFocus();
 	}
 
 	// called by the Client to append text in the TextArea
 	void append(String str) {
-		ta.append(str);
-		ta.setCaretPosition(ta.getText().length() - 1);
+		messageBox.append("  " + str);
+		messageBox.setCaretPosition(messageBox.getText().length() - 1);
 	}
 
 	void displayDialog(String msg) {
@@ -104,12 +145,13 @@ public class ClientGUI extends JFrame implements ActionListener{
 	// called by the GUI is the connection failed
 	// we reset our buttons, label, textfield
 	void connectionFailed() {
-		login.setEnabled(true);
+		//login.setEnabled(true);
 		logout.setEnabled(false);
 		whoIsIn.setEnabled(false);
-		tf.removeActionListener(this);
+		sendMsg.setEnabled(false);
+		help.setEnabled(false);
+		messageField.removeActionListener(this);
 		connected = false;
-		displayDialog("You have disconnected from the chat server.");
 		System.exit(0);
 	}
 
@@ -117,19 +159,37 @@ public class ClientGUI extends JFrame implements ActionListener{
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
 
-		if(o == logout) {
+		if (o == logout) {
 			client.sendMessage(new Message(Message.LOGOUT));
+			displayDialog("You have logged out from the chat server.");
 			connectionFailed();
 		}
 
-		if(o == whoIsIn) {
+		if (o == whoIsIn) {
 			client.sendMessage(new Message(Message.WHOISIN));
 			return;
 		}
 
+		if (o == sendMsg && connected) {
+			client.sendMessageGUI(messageField.getText());
+			messageField.setText("");
+			return;
+		}
+
+		if (o == help) {
+			append("\n\n  [Help Menu]");
+			append("\n  Below are a few tips to get you started.\n");
+			append("\n  Press the Help button to show this help menu.");
+			append("\n  Press the List Users button to show all online users.");
+			append("\n  Press the Logout button to logout from this server.");
+			append("\n  Use '/whisper [user] [message]' to privately message an online user.");
+			append("\n  To send a message to everyone, just type and press enter or the send message button.\n\n");
+			return;
+		}
+
 		if (connected) {
-			client.sendMessageGUI(tf.getText());
-			tf.setText("");
+			client.sendMessageGUI(messageField.getText());
+			messageField.setText("");
 			return;
 		}
 
@@ -148,16 +208,21 @@ public class ClientGUI extends JFrame implements ActionListener{
 				System.exit(0);
 			}
 
-			tf.setEditable(true);
-			connected = true;
-			label.setVisible(true);
-			tf.setVisible(true);
+			userDetails.setText("Logged in as user: " + nameGUI);
+			messageField.setEditable(true);
+			messageLabel.setVisible(true);
+			messageField.setVisible(true);
+			sendMsg.setVisible(true);
+			help.setVisible(true);
 			login.setEnabled(false);
 			logout.setEnabled(true);
 			whoIsIn.setEnabled(true);
+			sendMsg.setEnabled(true);
+			help.setEnabled(true);
+			messageField.requestFocus();
+			messageField.addActionListener(this);
 
-			tf.addActionListener(this);
-
+			connected = true;
 			pwGUI = null;
 		}
 	}
