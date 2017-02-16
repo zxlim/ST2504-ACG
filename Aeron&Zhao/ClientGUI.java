@@ -15,7 +15,7 @@ import java.awt.event.*;
 public class ClientGUI extends JFrame implements ActionListener{
 
 	protected static final long serialVersionUID = 1112122200L;
-	// will first hold "Username:", later on "Enter message"
+	// will hold "Enter message"
 	private JLabel label;
 	// to hold the Username and later on the messages
 	private JTextField tf;

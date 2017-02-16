@@ -27,7 +27,6 @@ public class Server {
 	private boolean keepGoing;
 
 	//Encryption and Handshake variables
-	private static byte[] sessionKey;
 	private static PKI serverRSA = Crypto.ksPrivateKey("Server.keystore", "serverRSA");
 	private static PKI serverECDSA = Crypto.ksPrivateKey("Server.keystore", "serverECDSA");
 
@@ -67,7 +66,6 @@ public class Server {
 				serverSocket.close();
 
 				//Purge session key and server keypairs on server stop
-				sessionKey = null;
 				serverRSA = null;
 				serverECDSA = null;
 
@@ -93,7 +91,6 @@ public class Server {
 	//Stop the server (GUI mode)
 	protected void stop() {
 		//Purge session key and server keypairs on server stop
-		sessionKey = null;
 		serverRSA = null;
 		serverECDSA = null;
 
@@ -230,6 +227,7 @@ public class Server {
 		Message m;
 		String date;
 
+		byte[] sessionKey;
 		PKI clientRSA;
 		PKI clientECDSA;
 
@@ -376,6 +374,7 @@ public class Server {
 			close();
 			clientRSA = null;
 			clientECDSA = null;
+			sessionKey = null;
 			broadcast(username + " has logged out from the chat server.");
 		} //run
 
