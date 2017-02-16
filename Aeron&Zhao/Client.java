@@ -26,6 +26,8 @@ public class Client  {
 	private String server;
 	private int port;
 	private ClientGUI cg;
+	private String nameGUI;
+	private String pwGUI;
 
 	//Encryption and Handshake variables
 	private static byte[] sessionKey;
@@ -35,10 +37,12 @@ public class Client  {
 	private static final PKI serverECDSA = Crypto.ksPublicKey("Client.keystore", "serverECDSA");
 
 	//Constructor
-	Client(final String server, final int port, final ClientGUI cg) {
+	Client(final String server, final int port, final ClientGUI cg, final String nameGUI, final String pwGUI) {
 		this.server = server;
 		this.port = port;
 		this.cg = cg;
+		this.nameGUI = nameGUI;
+		this.pwGUI = pwGUI;
 	}
 
 	//Attempt to connect to Server
@@ -46,18 +50,28 @@ public class Client  {
 		try {
 			socket = new Socket(server, port);
 		} catch (Exception e) {
-			display("Failed to connect to server. Server might be down.");
+			if (cg == null) {
+				System.out.println("Failed to connect to server. Server might be down.");
+			} else {
+				cg.displayDialog("Failed to connect to server. Server might be down");
+				cg.connectionFailed();
+			}
 			return false;
 		}
 
-		display("Connecting to server at " + socket.getInetAddress() + ":" + socket.getPort() + "...\n");
+		System.out.println("Connecting to server at " + socket.getInetAddress() + ":" + socket.getPort() + "...\n");
 
 		//Create I/O Stream
 		try {
 			sInput  = new ObjectInputStream(socket.getInputStream());
 			sOutput = new ObjectOutputStream(socket.getOutputStream());
 		} catch (IOException e) {
-			display("[Error] Exception creating new Input/output Streams: " + e);
+			if (cg == null) {
+				System.out.println("[Error] Exception creating new Input/output Streams: " + e);
+			} else {
+				display("[Error] Exception creating new Input/output Streams: " + e);
+				cg.connectionFailed();
+			}
 			return false;
 		}
 
@@ -71,7 +85,12 @@ public class Client  {
 				//Send account credentials
 				sOutput.writeObject(userAccount);
 			} catch (Exception e) {
-				display("Unable to login to server. Please try again.");
+				if (cg == null) {
+					System.out.println("Unable to login to server. Please try again.");
+				} else {
+					cg.displayDialog("Unable to login to server. Please try again");
+					cg.connectionFailed();
+				}
 				return false;
 			}
 		}
@@ -82,20 +101,30 @@ public class Client  {
 			final boolean verifySig = Crypto.verify_ECDSA(loginStatus.getMessage(), serverECDSA.getPublic(), loginStatus.getSignature());
 
 			if (!verifySig) {
-				display("Unable to login to server. Please try again.");
+				if (cg == null) {
+					System.out.println("Unable to login to server. Please try again.");
+				} else {
+					cg.displayDialog("Unable to login to server. Please try again");
+				}
 				return false;
 			} else {
 				if (Crypto.bytesToStr(loginStatus.getMessage()).equals("False")) {
-					display("Invalid username or password. Please try again.");
-					disconnect();
-					if(cg != null) {
+					if (cg == null) {
+						System.out.println("Invalid username or password. Please try again.");
+					} else {
+						cg.displayDialog("Invalid username or password. Please try again.");
 						cg.connectionFailed();
 					}
+					disconnect();
 					return false;
 				}
 			}
 		} catch (Exception e) {
-			display("Unable to login to server. Please try again.");
+			if (cg == null) {
+				System.out.println("Unable to login to server. Please try again.");
+			} else {
+				cg.displayDialog("Unable to login to server. Please try again");
+			}
 			return false;
 		}
 
@@ -104,14 +133,21 @@ public class Client  {
 			if (!encryptConnection()) {
 				sendMessage(new Message(Message.SECURITYLOGOUT));
 				disconnect();
-				if(cg != null) {
+				if (cg == null) {
+					System.out.println("Connection to server has been terminated due to security reasons.\n");
+				} else {
+					cg.displayDialog("Connection to server has been terminated due to security reasons.\n");
 					cg.connectionFailed();
 				}
-				display("Connection to server has been terminated due to security reasons.\n");
 				return false;
 			}
 		} catch (Exception e) {
-			display("Connection to server has been terminated due to security reasons.\n");
+			if (cg == null) {
+				System.out.println("Connection to server has been terminated due to security reasons.\n");
+			} else {
+				cg.displayDialog("Connection to server has been terminated due to security reasons.\n");
+				cg.connectionFailed();
+			}
 			return false;
 		}
 
@@ -154,9 +190,17 @@ public class Client  {
 			return new Credentials(encUsername, encPassword, encRSA, encECDSA);
 		} else {
 			//GUI mode
-			//Temporary only
-			display("GUI Login not yet supported. Please use 'java Client' instead of 'java ClientGUI'");
-			return null;
+			final byte[] encUsername = Crypto.encrypt_RSA(Crypto.strToBytes(nameGUI), serverRSA.getPublic());
+			final byte[] encPassword = Crypto.encrypt_RSA(Crypto.strToBytes(pwGUI), serverRSA.getPublic());
+
+			//Generate new RSA (For encryption) and ECDSA (For digital signature) Keypairs
+			clientRSA = Crypto.generate_RSA();
+			clientECDSA = Crypto.generate_ECDSA();
+
+			final byte[] encRSA = Crypto.encrypt_RSA(clientRSA.getPubBytes(), serverRSA.getPublic());
+			final byte[] encECDSA = Crypto.encrypt_RSA(clientECDSA.getPubBytes(), serverRSA.getPublic());
+
+			return new Credentials(encUsername, encPassword, encRSA, encECDSA);
 		}
 	} //login
 
@@ -171,31 +215,40 @@ public class Client  {
 
 			final Message serverHs1 = (Message) sInput.readObject();
 			final byte[] serverHs1Msg = Crypto.decrypt_AES(serverHs1.getEncrypted(), sessionKey);
-			final boolean serverHs1Sig = Crypto.verify_ECDSA(serverHs1msg, serverECDSA.getPublic(), serverHs1.getSignature());
+			final boolean serverHs1Sig = Crypto.verify_ECDSA(serverHs1Msg, serverECDSA.getPublic(), serverHs1.getSignature());
 
-			if (Crypto.bytesToStr(serverHs1Msg).equals("") && serverHs1Sig) {
-				final byte[] clientHsMsg = Crypto.encrypt_AES(Crypto.strToBytes(""), sessionKey);
+			if (Crypto.bytesToStr(serverHs1Msg).equals("PPAP Secured") && serverHs1Sig) {
+				final AES clientHsMsg = Crypto.encrypt_AES(Crypto.strToBytes("ppapClient-OK!"), sessionKey);
 				final byte[] clientHsSig = Crypto.sign_ECDSA(Crypto.strToBytes(""), clientECDSA.getPrivate());
 
 				sOutput.writeObject(new Message(Message.HANDSHAKE, clientHsMsg, clientHsSig));
 			} else {
 				display("[Error] Failed to establish a secure connection.");
+				if (cg != null) {
+					cg.connectionFailed();
+				}
 				return false;
 			}
 
 			final Message serverHs2 = (Message) sInput.readObject();
 			final byte[] serverHs2Msg = Crypto.decrypt_AES(serverHs2.getEncrypted(), sessionKey);
-			final boolean serverHs2Sig = Crypto.verify_ECDSA(serverHs2msg, serverECDSA.getPublic(), serverHs2.getSignature());
+			final boolean serverHs2Sig = Crypto.verify_ECDSA(serverHs2Msg, serverECDSA.getPublic(), serverHs2.getSignature());
 
-			if (Crypto.bytesToStr(serverHs2Msg).equals("") && serverHs2Sig) {
+			if (Crypto.bytesToStr(serverHs2Msg).equals("HANDSHAKE_Established") && serverHs2Sig) {
 				display("Connection to server secured with AES-256\n");
 				return true;
 			} else {
 				display("[Error] Failed to establish a secure connection.");
+				if (cg != null) {
+					cg.connectionFailed();
+				}
 				return false;
 			}
 		} catch (Exception e) {
 			display("[Error] Failed to establish a secure connection.");
+			if (cg != null) {
+				cg.connectionFailed();
+			}
 			return false;
 		}
 	} //encryptConnection
@@ -291,13 +344,15 @@ public class Client  {
 		}
 
 		//Create a new Client instance (Console mode)
-		Client client = new Client(serverAddress, portNumber, null);
+		Client client = new Client(serverAddress, portNumber, null, null, null);
 
 
 		if(!client.start() || sessionKey == null || sessionKey.length == 0) {
 			//If Client instance fails to start or session key does not exist, return and exit
 			return;
 		}
+
+		System.out.println("[Welcome to PPAP Secure Chat]\n");
 
 		//Loop forever
 		while(true) {
@@ -307,7 +362,7 @@ public class Client  {
 
 			if (msg.equalsIgnoreCase("/HELP")) {
 				//Shows the help menu when message is /LIST
-				System.out.println("\n\n[Welcome to PPAP Secure Chat]");
+				System.out.println("\n\n[Help Menu]");
 				System.out.println("Below are a few commands to get you started.\n");
 				System.out.println("/help to show this help menu.");
 				System.out.println("/list to show all online users.");
@@ -366,8 +421,10 @@ public class Client  {
 						cg.connectionFailed();
 					}
 					break;
-				} catch(ClassNotFoundException e2) {
+				} catch (ClassNotFoundException e) {
 					//Can't happen with a String object, catch for the sake of catching
+				} catch (Exception e) {
+					display("[Error] An error has occured while retrieving a message from the server.");
 				}
 			} //While loop
 			return;
