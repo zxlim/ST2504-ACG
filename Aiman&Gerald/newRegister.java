@@ -128,6 +128,14 @@ public class newRegister {
         // Create socket to connect to server
         socket = new Socket(registServerAddress, registServerPort);
 
+        try {
+        // Create both stream to write to server
+        sOutput = new ObjectOutputStream(socket.getOutputStream());
+        sInput = new ObjectInputStream(socket.getInputStream());
+        } catch (Exception eStream) {
+          System.out.print("Error with streams: " + eStream);
+        }
+
         // Send to server > newUser
         boolean result = sendToServer(newUser);
 
@@ -141,15 +149,15 @@ public class newRegister {
         }
 
         // // Retrieve result from server
-        // boolean checkResult = checkValid();
-        //
-        // if (!checkResult){
-        //   System.out.print("\nValidation failed. Your username is taken. Please use another username.\n");
-        //   JOptionPane.showMessageDialog(null,"Your username is taken. Please use another username.\n");
-        // } else {
-        //   System.out.print("\nValidation passed.\n");
-        //   JOptionPane.showMessageDialog(null,"User registration complete. You can now log in to the chat.\n");
-        // }
+        boolean checkResult = checkValid();
+
+        if (!checkResult){
+          System.out.print("\nValidation failed. Your username is taken. Please use another username.\n");
+          JOptionPane.showMessageDialog(null,"Your username is taken. Please use another username.\n");
+        } else {
+          System.out.print("\nValidation passed.\n");
+          JOptionPane.showMessageDialog(null,"User registration complete. You can now log in to the chat.\n");
+        }
 
         result = disconnect();
 
@@ -170,9 +178,6 @@ public class newRegister {
 
     public static boolean sendToServer(Credentials newUser){
       try {
-        // Create output stream to write to server
-        sOutput = new ObjectOutputStream(socket.getOutputStream());
-
         // Sending object "newUser" to server
         sOutput.writeObject(newUser);
 
@@ -188,35 +193,32 @@ public class newRegister {
     } // End of sendToServer()
 
 
-    // public static boolean checkValid(){
-    //
-    //   System.out.print("Checking for validity...");
-    //   boolean go = true;
-    //   String checkReturn = "";
-    //
-    //   try {
-    //     while (go) {
-    //
-    //       sInput = new ObjectInputStream(socket.getInputStream());
-    //
-    //       checkReturn = (String) sInput.readObject();
-    //
-    //       System.out.print(checkReturn);
-    //
-    //       sInput.close();
-    //
-    //       if (checkReturn.equals("cat")){
-    //         return true;
-    //       } else {
-    //         return false;
-    //       }
-    //     }
-    //   } catch (Exception e){
-    //     System.out.print("\n" + e);
-    //     return false;
-    //   }
-    //   return false;
-    // } // End of checkValid()
+    public static boolean checkValid(){
+
+      System.out.print("Checking for validity...");
+      String checkReturn = "";
+
+      try {
+        while (true) {
+
+          checkReturn = (String) sInput.readObject();
+
+          System.out.print(checkReturn);
+
+          sInput.close();
+
+          if (checkReturn.equals("cat")){
+            return true;
+          } else {
+            return false;
+          }
+
+        }
+      } catch (Exception e){
+        System.out.print("\n" + e);
+        return false;
+      }
+    } // End of checkValid()
 
 
     public static boolean disconnect(){
