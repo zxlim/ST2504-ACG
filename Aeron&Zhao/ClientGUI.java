@@ -12,7 +12,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class ClientGUI extends JFrame implements ActionListener, Serializable {
+public class ClientGUI extends JFrame implements ActionListener{
 
 	protected static final long serialVersionUID = 1112122200L;
 	// will first hold "Username:", later on "Enter message"
@@ -30,33 +30,34 @@ public class ClientGUI extends JFrame implements ActionListener, Serializable {
 	//Client instance
 	private Client client;
 
+	private String serverAddress, nameGUI, pwGUI;
+	private int serverPort;
+
 	//Constructor
-	ClientGUI() {
+	ClientGUI(final String serverAddress, final int serverPort, final String nameGUI, final String pwGUI) {
 
 		super("PPAP Secure Chat");
 
-		// The NorthPanel with:
-		JPanel northPanel = new JPanel(new GridLayout(3,1));
-		// the server name anmd the port number
-		JPanel serverAndPort = new JPanel(new GridLayout(1,5, 1, 3));
-		// the two JTextField with default value for server address and port number
-		tfServer = new JTextField("");
-		tfPort = new JTextField("");
-		tfPort.setHorizontalAlignment(SwingConstants.RIGHT);
+		this.serverAddress = serverAddress;
+		this.serverPort = serverPort;
+		this.nameGUI = nameGUI;
+		this.pwGUI = pwGUI;
 
-		serverAndPort.add(new JLabel("Server Address:  "));
-		serverAndPort.add(tfServer);
-		serverAndPort.add(new JLabel("Port Number:  "));
-		serverAndPort.add(tfPort);
-		serverAndPort.add(new JLabel(""));
-		// adds the Server an port field to the GUI
+		JPanel northPanel = new JPanel(new GridLayout(3,1));
+		JPanel serverAndPort = new JPanel(new GridLayout(1, 4, 1, 2));
+
+		serverAndPort.add(new JLabel("Server Address: " + serverAddress));
+		serverAndPort.add(new JLabel("Port Number: " + serverPort));
 		northPanel.add(serverAndPort);
 
 		// the Label and the TextField
-		label = new JLabel("Enter your username below", SwingConstants.CENTER);
+		label = new JLabel("Enter your message below", SwingConstants.CENTER);
 		northPanel.add(label);
-		tf = new JTextField("Anonymous");
+		tf = new JTextField("");
+		tf.setEditable(false);
 		tf.setBackground(Color.WHITE);
+		label.setVisible(false);
+		tf.setVisible(false);
 		northPanel.add(tf);
 		add(northPanel, BorderLayout.NORTH);
 
@@ -68,14 +69,14 @@ public class ClientGUI extends JFrame implements ActionListener, Serializable {
 		add(centerPanel, BorderLayout.CENTER);
 
 		// the 3 buttons
-		login = new JButton("Login");
+		login = new JButton("Join Chat");
 		login.addActionListener(this);
 		logout = new JButton("Logout");
 		logout.addActionListener(this);
-		logout.setEnabled(false);		// you have to login before being able to logout
-		whoIsIn = new JButton("Who is in");
+		logout.setEnabled(false);
+		whoIsIn = new JButton("List Users");
 		whoIsIn.addActionListener(this);
-		whoIsIn.setEnabled(false);		// you have to login before being able to Who is in
+		whoIsIn.setEnabled(false);
 
 		JPanel southPanel = new JPanel();
 		southPanel.add(login);
@@ -95,159 +96,138 @@ public class ClientGUI extends JFrame implements ActionListener, Serializable {
 		ta.append(str);
 		ta.setCaretPosition(ta.getText().length() - 1);
 	}
+
+	void displayDialog(String msg) {
+		JOptionPane.showMessageDialog(null, msg, "PPAP Secure Chat", JOptionPane.WARNING_MESSAGE);
+	}
+
 	// called by the GUI is the connection failed
 	// we reset our buttons, label, textfield
 	void connectionFailed() {
 		login.setEnabled(true);
 		logout.setEnabled(false);
 		whoIsIn.setEnabled(false);
-		label.setText("Enter your username below");
-		tf.setText("Anonymous");
-		// let the user change them
-		tfServer.setEditable(true);
-		tfPort.setEditable(true);
-		// don't react to a <CR> after the username
 		tf.removeActionListener(this);
 		connected = false;
+		displayDialog("You have disconnected from the chat server.");
+		System.exit(0);
 	}
 
 	//Button Actions
 	public void actionPerformed(ActionEvent e) {
 		Object o = e.getSource();
-		// if it is the Logout button
+
 		if(o == logout) {
 			client.sendMessage(new Message(Message.LOGOUT));
-			return;
+			connectionFailed();
 		}
-		// if it the who is in button
+
 		if(o == whoIsIn) {
 			client.sendMessage(new Message(Message.WHOISIN));
 			return;
 		}
 
-		// ok it is coming from the JTextField
-		if(connected) {
-			// just have to send the message
-			//client.sendMessage(new Message(Message.MESSAGE, tf.getText()));
+		if (connected) {
+			client.sendMessageGUI(tf.getText());
 			tf.setText("");
 			return;
 		}
 
-		//Temporary disabled GUI login to prevent compile errors
 		if(o == login) {
-			JOptionPane.showMessageDialog(null, "GUI Login not yet supported. Please use 'java Client' instead of 'java ClientGUI'");
-			return;
-			/*// ok it is a connection request
-			String username = tf.getText().trim();
-			// empty username ignore it
-			if(username.length() == 0)
-			return;
-			// empty serverAddress ignore it
-			String server = tfServer.getText().trim();
-			if(server.length() == 0)
-			return;
-			// empty or invalid port numer, ignore it
-			String portNumber = tfPort.getText().trim();
-			if(portNumber.length() == 0)
-			return;
-			int port = 0;
+			append("Logging in...\n");
+
 			try {
-				port = Integer.parseInt(portNumber);
-			}
-			catch(Exception en) {
-				return;   // nothing I can do if port number is not valid
+				client = new Client(serverAddress, serverPort, this, nameGUI, pwGUI);
+
+				if (!client.start()) {
+					System.exit(0);
+				}
+			} catch (Exception ex) {
+				System.out.println(ex);
+				ex.printStackTrace();
+				System.exit(0);
 			}
 
-			// try creating a new Client with GUI
-			client = new Client(server, port, username, this);
-			// test if we can start the Client
-			if(!client.start())
-			return;
-			tf.setText("");
-			label.setText("Enter your message below");
+			tf.setEditable(true);
 			connected = true;
-
-			// disable login button
+			label.setVisible(true);
+			tf.setVisible(true);
 			login.setEnabled(false);
-			// enable the 2 buttons
 			logout.setEnabled(true);
 			whoIsIn.setEnabled(true);
-			// disable the Server and Port JTextField
-			tfServer.setEditable(true);
-			tfPort.setEditable(true);
-			// Action listener for when the user enter a message
-			tf.addActionListener(this);*/
-		}
 
+			tf.addActionListener(this);
+
+			pwGUI = null;
+		}
 	}
 
 	//Main method
 	public static void main(String[] args) {
-		//new ConnectGUI();
-		return;
-	}
+		String addr = "", port = "", username = "", password = "";
+		int portNumber = -1;
 
-	//Server Connection Frame
-	private void connectGUI() {
 		try {
-			//Login Panel
-			JPanel loginPanel = new JPanel(new GridLayout(2,2));
+			//Server Connection Panel
+			JPanel connectPanel = new JPanel(new GridLayout(2,2));
 
 			JLabel addrLabel = new JLabel("Server Address\t");
 			JTextField addrInput = new JTextField(15);
 			JLabel portLabel = new JLabel("Server Port\t");
 			JTextField portInput = new JTextField(15);
-			loginPanel.add(addrLabel);
-			loginPanel.add(addrInput);
-			loginPanel.add(portLabel);
-			loginPanel.add(portInput);
+			connectPanel.add(addrLabel);
+			connectPanel.add(addrInput);
+			connectPanel.add(portLabel);
+			connectPanel.add(portInput);
 
-			int result = JOptionPane.showConfirmDialog(null, loginPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+			int connectResult = JOptionPane.showConfirmDialog(null, connectPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-			if (result == JOptionPane.YES_OPTION) {
-				new Client();
+			if (connectResult == JOptionPane.YES_OPTION) {
+				addr = addrInput.getText().trim();
+
+				if (addr == null || addr.isEmpty()) {
+					JOptionPane.showMessageDialog(null, "Server Address cannot be left blank.", "PPAP Secure Chat", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+				try {
+					portNumber = Integer.parseInt(portInput.getText());
+				} catch (NumberFormatException e) {
+					JOptionPane.showMessageDialog(null, "Invalid port number.\nPlease enter a port number between 0 and 65535.", "PPAP Secure Chat", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
 			} else {
-				new Client();
-				return false;
+				return;
 			}
-		} catch (NullPointerException e) {
-			return false;
-		}
-	}
 
-	//Login Frame
-	private static boolean loginGUI() {
-		try {
 			//Login Panel
-			JPanel loginPanel = new JPanel(new GridLayout(4,2));
+			JPanel loginPanel = new JPanel(new GridLayout(2,2));
 
 			JLabel userLabel = new JLabel("Username\t");
 			JTextField userInput = new JTextField(15);
 			JLabel pwLabel = new JLabel("Password\t");
 			JPasswordField pwInput = new JPasswordField(15);
-			JLabel addrLabel = new JLabel("Server Address\t");
-			JTextField addrInput = new JTextField(15);
-			JLabel portLabel = new JLabel("Server Port\t");
-			JTextField portInput = new JTextField(15);
 			loginPanel.add(userLabel);
 			loginPanel.add(userInput);
 			loginPanel.add(pwLabel);
 			loginPanel.add(pwInput);
-			loginPanel.add(addrLabel);
-			loginPanel.add(addrInput);
-			loginPanel.add(portLabel);
-			loginPanel.add(portInput);
 
-			int result = JOptionPane.showConfirmDialog(null, loginPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+			int loginResult = JOptionPane.showConfirmDialog(null, loginPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
-			if (result == JOptionPane.YES_OPTION) {
-				System.out.println("[DEBUG] " + userInput.getText() + " : " + new String(pwInput.getPassword()));
-				return true;
+			if (loginResult == JOptionPane.YES_OPTION) {
+				username = userInput.getText();
+				password = new String(pwInput.getPassword());
+
+				if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
+					JOptionPane.showMessageDialog(null, "Username and/ or password cannot be left blank.", "PPAP Secure Chat", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
 			} else {
-				return false;
+				return;
 			}
 		} catch (NullPointerException e) {
-			return false;
+			return;
 		}
+
+		new ClientGUI(addr, portNumber, username, password);
 	}
 }
