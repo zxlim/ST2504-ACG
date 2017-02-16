@@ -117,6 +117,7 @@ public class Server {
 
 		//Add timestamp to message
 		String time = sdf.format(new Date());
+		// this is a plaintext.
 		String messageLf = time + " " + message + "\n";
 
 
@@ -131,38 +132,17 @@ public class Server {
 		for (int i = clientList.size(); --i >= 0;) {
 			ClientThread clientThread = clientList.get(i);
 
-			if (!clientThread.writeMsg(messageLf)) {
+			final byte[] clientSessionKey = clientThread.sessionKey;
+			//encrypt here.
+			byte[] signat = Crypto.sign_ECDSA(Crypto.strToBytes(messageLf),serverECDSA.getPrivate());
+			Message messageLfM = new Message(Message.MESSAGE,Crypto.encrypt_AES(Crypto.strToBytes(messageLf),clientSessionKey),signat);
+
+			if (!clientThread.writeMsgM(messageLfM)) {
 				clientList.remove(i);
 				display("Disconnected Client " + clientThread.username + " removed from list.");
 			}
 		}
 	} //broadcast
-
-	private synchronized void broadcastM(final Message msg) {
-
-		//Add timestamp to message
-		String time = sdf.format(new Date());
-		String messageLf = time + " " + msg + "\n";
-
-
-		if (sg == null) {
-			//Console mode
-			System.out.print("Hi");
-		} else {
-			//GUI mode
-			sg.appendRoom("hi");
-		}
-
-		for (int i = clientList.size(); --i >= 0;) {
-			ClientThread clientThread = clientList.get(i);
-
-			if (!clientThread.writeMsgM(msg)) {
-				clientList.remove(i);
-				display("Disconnected Client " + clientThread.username + " removed from list.");
-			}
-		}
-	} //broadcast
-
 
 	//Client logout
 	synchronized void remove(final int id) {
@@ -343,11 +323,10 @@ public class Server {
 					final byte[] plaintext = Crypto.decrypt_AES(m.getEncrypted(), sessionKey);
 					final boolean verifySig = Crypto.verify_ECDSA(plaintext, clientECDSA.getPublic(), m.getSignature());
 					byte[] signa = Crypto.sign_ECDSA(plaintext,serverECDSA.getPrivate());
-					Message send = new Message(Message.MESSAGE,m.getEncrypted(),signa);
+					Message send = new Message(Message.MESSAGE,Crypto.encrypt_AES(plaintext,sessionKey),signa);
 
 					if (verifySig) {
-						//broadcast(username + ": " + Crypto.bytesToStr(plaintext));
-						broadcastM(send);
+						broadcast(username + ": " + Crypto.bytesToStr(plaintext));
 					} else {
 						display("[Error] Verification of " + username + "\'s digital Signature failed.\n");
 					}
@@ -409,9 +388,12 @@ public class Server {
 				close();
 				return false;
 			}
+			//final byte[] clientSessionKey = clientThread.sessionKey;
+			byte[] signat = Crypto.sign_ECDSA(Crypto.strToBytes(msg),serverECDSA.getPrivate());
+			Message send = new Message(Message.WHOISIN,Crypto.encrypt_AES(Crypto.strToBytes(msg),sessionKey),signat);
 
 			try {
-				sOutput.writeObject(msg);
+				sOutput.writeObject(send);
 			} catch (IOException e) {
 				display("[Error] Exception sending message to " + username);
 				display(e.toString());
@@ -419,6 +401,7 @@ public class Server {
 			return true;
 		} //writeMsg
 
+		//To write a message using Message object
 		private boolean writeMsgM(final Message msg) {
 			if (!socket.isConnected()) {
 				close();
@@ -442,7 +425,7 @@ public class Server {
 				display("Securing connection with " + username + "...");
 				/*Time for handshake*/
 				Message session = (Message) sInput.readObject();
-				System.out.println("Handshake started");
+				//System.out.println("Handshake started");
 				sessionKey = Crypto.decrypt_RSA(session.getMessage(),serverRSA.getPrivate());
 				final boolean verifySession = Crypto.verify_ECDSA(sessionKey,clientECDSA.getPublic(),session.getSignature());
 
@@ -454,7 +437,7 @@ public class Server {
 					byte[] sig = Crypto.sign_ECDSA(Crypto.strToBytes("PPAP Secured"),serverECDSA.getPrivate());
 					Message checkVerified = new Message(Message.HANDSHAKE,encryptedAES,sig);
 					sOutput.writeObject(checkVerified);
-					System.out.println("Sent checkVerified");
+					//System.out.println("Sent checkVerified");
 
 					Message sessionRound2 = (Message) sInput.readObject();
 					byte[] decryptMsg = Crypto.decrypt_AES(sessionRound2.getEncrypted(),sessionKey);
@@ -464,7 +447,7 @@ public class Server {
 						byte[] sig2 = Crypto.sign_ECDSA(Crypto.strToBytes("HANDSHAKE_Established"),serverECDSA.getPrivate());
 						Message checkVerified2 = new Message(Message.HANDSHAKE, encryptedAES2,sig2);
 						sOutput.writeObject(checkVerified2);
-						System.out.println("Sent checkVerified2");
+						//System.out.println("Sent checkVerified2");
 						return true;
 					} else {
 						return false;
@@ -474,7 +457,6 @@ public class Server {
 					return false;
 				}
 
-				//To be completed. Client-Server encryption process and handshake in here.
 				//return false;
 			} catch (Exception e) {
 				display("[Error] Failed to establish a secure connection.");
