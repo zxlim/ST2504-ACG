@@ -12,9 +12,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 
-public class ClientGUI extends JFrame implements ActionListener {
+public class ClientGUI extends JFrame implements ActionListener, Serializable {
 
-	private static final long serialVersionUID = 1L;
+	protected static final long serialVersionUID = 1112122200L;
 	// will first hold "Username:", later on "Enter message"
 	private JLabel label;
 	// to hold the Username and later on the messages
@@ -27,26 +27,21 @@ public class ClientGUI extends JFrame implements ActionListener {
 	private JTextArea ta;
 	// if it is for connection
 	private boolean connected;
-	// the Client object
+	//Client instance
 	private Client client;
-	// the default port number
-	private int defaultPort;
-	private String defaultHost;
 
-	// Constructor connection receiving a socket number
-	ClientGUI(String host, int port) {
+	//Constructor
+	ClientGUI() {
 
 		super("PPAP Secure Chat");
-		defaultPort = port;
-		defaultHost = host;
 
 		// The NorthPanel with:
 		JPanel northPanel = new JPanel(new GridLayout(3,1));
 		// the server name anmd the port number
 		JPanel serverAndPort = new JPanel(new GridLayout(1,5, 1, 3));
 		// the two JTextField with default value for server address and port number
-		tfServer = new JTextField(host);
-		tfPort = new JTextField("" + port);
+		tfServer = new JTextField("");
+		tfPort = new JTextField("");
 		tfPort.setHorizontalAlignment(SwingConstants.RIGHT);
 
 		serverAndPort.add(new JLabel("Server Address:  "));
@@ -108,12 +103,9 @@ public class ClientGUI extends JFrame implements ActionListener {
 		whoIsIn.setEnabled(false);
 		label.setText("Enter your username below");
 		tf.setText("Anonymous");
-		// reset port number and host name as a construction time
-		tfPort.setText("" + defaultPort);
-		tfServer.setText(defaultHost);
 		// let the user change them
-		tfServer.setEditable(false);
-		tfPort.setEditable(false);
+		tfServer.setEditable(true);
+		tfPort.setEditable(true);
 		// don't react to a <CR> after the username
 		tf.removeActionListener(this);
 		connected = false;
@@ -191,17 +183,40 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 	//Main method
 	public static void main(String[] args) {
-		final boolean check = login();
-		if (check) {
-			System.out.println("OK");
-			new ClientGUI("localhost", 1500);
-		} else {
-			System.out.println("Fail");
+		//new ConnectGUI();
+		return;
+	}
+
+	//Server Connection Frame
+	private void connectGUI() {
+		try {
+			//Login Panel
+			JPanel loginPanel = new JPanel(new GridLayout(2,2));
+
+			JLabel addrLabel = new JLabel("Server Address\t");
+			JTextField addrInput = new JTextField(15);
+			JLabel portLabel = new JLabel("Server Port\t");
+			JTextField portInput = new JTextField(15);
+			loginPanel.add(addrLabel);
+			loginPanel.add(addrInput);
+			loginPanel.add(portLabel);
+			loginPanel.add(portInput);
+
+			int result = JOptionPane.showConfirmDialog(null, loginPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+			if (result == JOptionPane.YES_OPTION) {
+				new Client();
+			} else {
+				new Client();
+				return false;
+			}
+		} catch (NullPointerException e) {
+			return false;
 		}
 	}
 
 	//Login Frame
-	private static boolean login() {
+	private static boolean loginGUI() {
 		try {
 			//Login Panel
 			JPanel loginPanel = new JPanel(new GridLayout(4,2));

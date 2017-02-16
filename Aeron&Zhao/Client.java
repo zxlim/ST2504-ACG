@@ -111,7 +111,7 @@ public class Client  {
 				return false;
 			}
 		} catch (Exception e) {
-			display("[Error] Failed to establish a secure connection.");
+			display("Connection to server has been terminated due to security reasons.\n");
 			return false;
 		}
 
@@ -164,8 +164,36 @@ public class Client  {
 	private boolean encryptConnection() {
 		try {
 			display("Securing connection with server...");
-			//To be completed. Client-Server encryption process and handshake in here.
-			return false;
+			sessionKey = Crypto.generate_aesKey();
+			final byte[] keySignature = Crypto.sign_ECDSA(sessionKey, clientECDSA.getPrivate());
+
+			sOutput.writeObject(new Message(Message.HANDSHAKE, Crypto.encrypt_RSA(sessionKey, serverRSA.getPublic()), keySignature));
+
+			final Message serverHs1 = (Message) sInput.readObject();
+			final byte[] serverHs1Msg = Crypto.decrypt_AES(serverHs1.getEncrypted(), sessionKey);
+			final boolean serverHs1Sig = Crypto.verify_ECDSA(serverHs1msg, serverECDSA.getPublic(), serverHs1.getSignature());
+
+			if (Crypto.bytesToStr(serverHs1Msg).equals("") && serverHs1Sig) {
+				final byte[] clientHsMsg = Crypto.encrypt_AES(Crypto.strToBytes(""), sessionKey);
+				final byte[] clientHsSig = Crypto.sign_ECDSA(Crypto.strToBytes(""), clientECDSA.getPrivate());
+
+				sOutput.writeObject(new Message(Message.HANDSHAKE, clientHsMsg, clientHsSig));
+			} else {
+				display("[Error] Failed to establish a secure connection.");
+				return false;
+			}
+
+			final Message serverHs2 = (Message) sInput.readObject();
+			final byte[] serverHs2Msg = Crypto.decrypt_AES(serverHs2.getEncrypted(), sessionKey);
+			final boolean serverHs2Sig = Crypto.verify_ECDSA(serverHs2msg, serverECDSA.getPublic(), serverHs2.getSignature());
+
+			if (Crypto.bytesToStr(serverHs2Msg).equals("") && serverHs2Sig) {
+				display("Connection to server secured with AES-256\n");
+				return true;
+			} else {
+				display("[Error] Failed to establish a secure connection.");
+				return false;
+			}
 		} catch (Exception e) {
 			display("[Error] Failed to establish a secure connection.");
 			return false;
