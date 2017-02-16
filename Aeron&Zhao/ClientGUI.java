@@ -203,12 +203,6 @@ public class ClientGUI extends JFrame implements ActionListener {
 	//Login Frame
 	private static boolean login() {
 		try {
-			// JFrame frame = new JFrame();
-			// frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			// frame.setLocationRelativeTo( null );
-			// frame.setVisible( true );
-			// frame.setSize(500, 400);
-
 			//Login Panel
 			JPanel loginPanel = new JPanel(new GridLayout(4,2));
 
