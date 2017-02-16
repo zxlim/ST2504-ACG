@@ -141,6 +141,32 @@ public class Server {
 		}
 	} //broadcast
 
+	private synchronized void broadcastM(final Message msg) {
+
+		//Add timestamp to message
+		String time = sdf.format(new Date());
+		String messageLf = time + " " + msg + "\n";
+
+
+		if (sg == null) {
+			//Console mode
+			System.out.print("Hi");
+		} else {
+			//GUI mode
+			sg.appendRoom("hi");
+		}
+
+		for (int i = clientList.size(); --i >= 0;) {
+			ClientThread clientThread = clientList.get(i);
+
+			if (!clientThread.writeMsgM(msg)) {
+				clientList.remove(i);
+				display("Disconnected Client " + clientThread.username + " removed from list.");
+			}
+		}
+	} //broadcast
+
+
 	//Client logout
 	synchronized void remove(final int id) {
 		//Go through ArrayList until ID is found
@@ -318,8 +344,12 @@ public class Server {
 					case Message.MESSAGE:
 					final byte[] plaintext = Crypto.decrypt_AES(m.getEncrypted(), sessionKey);
 					final boolean verifySig = Crypto.verify_ECDSA(plaintext, clientECDSA.getPublic(), m.getSignature());
+					byte[] signa = Crypto.sign_ECDSA(plaintext,serverECDSA.getPrivate());
+					Message send = new Message(Message.MESSAGE,m.getEncrypted(),signa);
+
 					if (verifySig) {
-						broadcast(username + ": " + Crypto.bytesToStr(plaintext));
+						//broadcast(username + ": " + Crypto.bytesToStr(plaintext));
+						broadcastM(send);
 					} else {
 						display("[Error] Verification of " + username + "\'s digital Signature failed.\n");
 					}
@@ -389,6 +419,23 @@ public class Server {
 			}
 			return true;
 		} //writeMsg
+
+		private boolean writeMsgM(final Message msg) {
+			if (!socket.isConnected()) {
+				close();
+				return false;
+			}
+
+			try {
+				sOutput.writeObject(msg);
+			} catch (IOException e) {
+				display("[Error] Exception sending message to " + username);
+				display(e.toString());
+			}
+			return true;
+		} //writeMsg
+
+
 
 		private boolean encryptConnection() {
 			try {
