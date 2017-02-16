@@ -40,6 +40,7 @@ public class RegisterServer{
 
                 if (file.validateName(name) == 1) {
                     System.out.println("Invalid Username");
+                    System.out.println(name + " Failed to Register\n");
                     sOutput.writeObject("Failure");
                 } else {
 
@@ -49,11 +50,12 @@ public class RegisterServer{
                     String strSalt = Crypto.bytesToBase64(salt);
                     file.credentialWriter(name, strHashed , strSalt);
                     System.out.println("Username Valid");
+                    System.out.println(name + " Registered\n");
                     sOutput.writeObject("Success");
 
                 }
 
-                System.out.println("Message from Client: " + name);
+
 
                 //sInput.close();
                 //sOutput.close();
@@ -67,7 +69,7 @@ public class RegisterServer{
             return;
         }
 
-        
+
         //Encryption
         // byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("aiman"), serverRSApub.getPublic());
         // byte[] password = Crypto.encrypt_RSA(Crypto.strToBytes("1qwe#@!"), serverRSApub.getPublic());
