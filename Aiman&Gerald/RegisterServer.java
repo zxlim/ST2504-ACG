@@ -1,4 +1,4 @@
-import java.io.FileInputStream;
+//import java.io.FileInputStream;
 
 import java.io.*;
 import java.net.*;
@@ -30,6 +30,7 @@ public class RegisterServer{
                 //Create new I/O stream from socket
 
                 sInput = new ObjectInputStream(socket.getInputStream());
+                sOutput =  new ObjectOutputStream(socket.getOutputStream());
 
                 //Read input from Client
                 Credentials newUser = (Credentials) sInput.readObject();
@@ -39,7 +40,7 @@ public class RegisterServer{
 
                 if (file.validateName(name) == 1) {
                     System.out.println("Invalid Username");
-
+                    sOutput.writeObject("Failure");
                 } else {
 
                     byte[] salt = Crypto.secureRand(32);
@@ -48,19 +49,14 @@ public class RegisterServer{
                     String strSalt = Crypto.bytesToBase64(salt);
                     file.credentialWriter(name, strHashed , strSalt);
                     System.out.println("Username Valid");
+                    sOutput.writeObject("Success");
 
                 }
 
                 System.out.println("Message from Client: " + name);
 
-
-                //sOutput =  new ObjectOutputStream(socket.getOutputStream());
-
-                //sOutput.writeObject("Can");
-                //System.out.println("Message from Client: " + name);
-
-                sInput.close();
-                sOutput.close();
+                //sInput.close();
+                //sOutput.close();
 
             }
 
@@ -71,7 +67,7 @@ public class RegisterServer{
             return;
         }
 
-
+        
         //Encryption
         // byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("aiman"), serverRSApub.getPublic());
         // byte[] password = Crypto.encrypt_RSA(Crypto.strToBytes("1qwe#@!"), serverRSApub.getPublic());

@@ -70,7 +70,9 @@ public class TestnewRegister {
         username = JOptionPane.showInputDialog(null,"Please enter your new username.\nNOTE \t : \t are not allowed.");
 
         if (username.equals("") || username == null){
-          JOptionPane.showMessageDialog(null,"You did not enter a username. Please try again.");
+          username = "Gerald";
+          usernameInput = true;
+          //JOptionPane.showMessageDialog(null,"You did not enter a username. Please try again.");
         } else if (username.contains(":")) {
           JOptionPane.showMessageDialog(null,"A \":\" has been detected in your username. Please try again.");
         } else {
@@ -126,29 +128,31 @@ public class TestnewRegister {
         System.out.println("\n\nUser details processing done.\nEncrypted username: " + newUser.getUsername() + "\nEncrypted password: " + newUser.getPassword() + "");
 
         // Create socket to connect to server
-        socket = new Socket(registServerAddress, registServerPort);
-
         try {
-        // Create both stream to write to server
-        sOutput = new ObjectOutputStream(socket.getOutputStream());
-        sInput = new ObjectInputStream(socket.getInputStream());
-        } catch (Exception eStream) {
-          System.out.print("Error with streams: " + eStream);
+          socket = new Socket(registServerAddress, registServerPort);
+        } catch (Exception eSocket){
+          System.out.print("\nError with socket: " + eSocket);
+          System.exit(0);
         }
 
-        // Send to server > newUser
+        System.out.print("Connection to server socket success.\n");
+        String msg = "Connection accepted @ " + socket.getInetAddress() + ":" + socket.getPort() + "\n";
+        System.out.print(msg);
+
+
+//        Send to server > newUser
         boolean result = sendToServer(newUser);
 
         if (!result) {
-          System.out.print("Dispatch failed. Please check server connection.\n");
+          System.out.print("\nDispatch failed. Please check server connection.\n");
           JOptionPane.showMessageDialog(null,"Dispatch failed. Please check server connection");
           System.exit(0);
         } else {
-          System.out.print("Dispatch server success.\n");
+          System.out.print("\nDispatch to server success.\n");
           JOptionPane.showMessageDialog(null,"Dispatch to server success.");
         }
 
-        // // Retrieve result from server
+        // Retrieve result from server
         boolean checkResult = checkValid();
 
         if (!checkResult){
@@ -175,47 +179,75 @@ public class TestnewRegister {
 
   } // End of main()
 
+    public static void start(){
+
+
+    }
+
 
     public static boolean sendToServer(Credentials newUser){
       try {
+
+        // Create output stream to write to server
+        try {
+          System.out.print("Initialising Output stream...");
+          sOutput = new ObjectOutputStream(socket.getOutputStream());
+          //sInput = new ObjectInputStream(socket.getInputStream());
+        } catch (Exception eStream) {
+          System.out.print("\nError with streams: " + eStream);
+          System.exit(0);
+        }
+
+        System.out.print("\nInitialisation of Output stream success.");
+
         // Sending object "newUser" to server
         sOutput.writeObject(newUser);
 
         // Close the output stream
-        sOutput.close();
+        //sOutput.close();
 
         return true;
 
       } catch (Exception e){
-        System.out.print("Error sending user details to server: " + e);
+        System.out.print("\nError sending user details to server: " + e);
         return false;
       }
     } // End of sendToServer()
 
 
     public static boolean checkValid(){
-
-      System.out.print("Checking for validity...");
-      String checkReturn = "";
-
       try {
-        while (true) {
+      Thread.sleep(1000);
+      } catch (Exception eSleep){
+        System.out.print("Error in sleep: " + eSleep);
+      }
 
-          checkReturn = (String) sInput.readObject();
+      System.out.print("Checking for validity...\n");
+      String checkReturn = "";
+      try {
+        // Create input stream
+        try {
+          System.out.print("Initialising Input stream...");
+        //sOutput = new ObjectOutputStream(socket.getOutputStream());
+        sInput = new ObjectInputStream(socket.getInputStream());
+        } catch (Exception eStream) {
+          System.out.print("\nError with streams: " + eStream);
+          System.exit(0);
+        }
+      checkReturn = (String) sInput.readObject();
+      System.out.print("\nInputStream read.");
+      System.out.print(checkReturn);
+      //sInput.close();
 
-          System.out.print(checkReturn);
-
-          sInput.close();
-
-          if (checkReturn.equals("cat")){
+          if (checkReturn.equals("Success")){
             return true;
           } else {
             return false;
           }
 
-        }
+
       } catch (Exception e){
-        System.out.print("\n" + e);
+        System.out.print("\ncheckValid() method error: " + e);
         return false;
       }
     } // End of checkValid()
