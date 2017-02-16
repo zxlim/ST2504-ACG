@@ -22,6 +22,7 @@ public class RegisterServer{
 
 
             while(go){
+
                 //Accept client connection
                 socket = serverSocket.accept();
                 String clientIp = socket.getLocalSocketAddress().toString();
@@ -30,21 +31,28 @@ public class RegisterServer{
                 //Create new I/O stream from socket
 
                 sInput = new ObjectInputStream(socket.getInputStream());
-                //sOutput =  new ObjectOutputStream(socket.getOutputStream());
+                sOutput =  new ObjectOutputStream(socket.getOutputStream());
 
                 //sOutput.writeObject("Success!");
                 System.out.println("Input initialized");
 
-
-
                 //Read input from Client
                 Credentials newUser = (Credentials) sInput.readObject();
 
+                //Decrypting the username
                 String name = Crypto.bytesToStr(Crypto.decrypt_RSA(newUser.getUsername(), serverRSA.getPrivate()));
-                System.out.println("Message from Client: " + name);
-                sInput.close();
-                sOutput.close();
+                System.out.println("Client's username: " + name);
 
+                //Send ObjectOutputStream
+                sOutput.writeObject("cat");
+                System.out.print("Sent CAT.");
+
+                try {
+                  sInput.close();
+                  sOutput.close();
+                } catch (Exception IOException){
+                  System.out.print("IO Close error: " + IOException);
+                }
             }
 
             socket.close();
