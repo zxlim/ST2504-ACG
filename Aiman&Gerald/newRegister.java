@@ -3,6 +3,7 @@ import javax.swing.JOptionPane;
 import java.net.*;
 import java.io.*;
 import java.security.Key;
+
 //import java.security.KeyPair;
 import java.security.KeyStore;
 import java.security.PrivateKey;
@@ -21,13 +22,18 @@ import java.security.cert.Certificate;
 public class newRegister {
 
   // Server address and port
-  private String registServerAddress = "localhost";
-  private int registServerPort = 1449;
+  private static String registServerAddress = "localhost";
+  private static int registServerPort = 1449;
+
+  // For user details
+  private static String username;
+  private static String password;
+  private static Credentials newUser;
 
   // for I/O
-  //private ObjectInputStream sInput;		// to read from the socket
-  //private ObjectOutputStream sOutput;		// to write on the socket
-  private Socket socket;
+  private static ObjectInputStream sInput;		// to read from the socket
+  private static ObjectOutputStream sOutput;		// to write on the socket
+  private static Socket socket;
 
     public static void main(String[] args){
 
@@ -35,15 +41,9 @@ public class newRegister {
     boolean usernameInput = false;
     boolean passwordInput = false;
 
-    // For user details
-    String username;
-    String password;
-
     // Encrypted user details
     byte[] usernameRSA;
     byte[] passwordRSA;
-
-
 
     // Start of registration
     int option =  JOptionPane.showConfirmDialog(null, "This program is used to register new users only.\nPlease exit this program if you are an existing user or already have an account.\n\t\tHit CANCEL to exit.\n\n","Create an account",JOptionPane.OK_CANCEL_OPTION);
@@ -53,6 +53,15 @@ public class newRegister {
         if (option == JOptionPane.CANCEL_OPTION){
           System.exit(0);
         }
+
+    // Asking for Registration Server IP
+    registServerAddress = JOptionPane.showInputDialog(null,"Please input the registration server IP address.","Server IP Address",JOptionPane.OK_CANCEL_OPTION);
+
+    if (registServerAddress.equals("") || registServerAddress == null){
+        registServerAddress = "localhost";
+    }
+
+    System.out.print("Connecting to Registration Server IP " + registServerAddress + "\n");
 
     // Username input loop
     do {
@@ -86,7 +95,7 @@ public class newRegister {
 
       // Checking that both passwords that user entered matches
       if (password.equals(passwordCheck)){
-        JOptionPane.showMessageDialog(null,"User details successfully completed.\n\n\nCreating user account for user [" + username + "]...");
+        JOptionPane.showMessageDialog(null,"User details successfully completed.\nUser account creation for user [" + username + "] will commence.");
         passwordInput = true;
       } else {
         JOptionPane.showMessageDialog(null,"Your passwords did not match! Please try again.");
@@ -126,56 +135,74 @@ public class newRegister {
         byte[] passwordEncrypted = Crypto.encrypt_RSA(passwordInBytes, serverPubKey);
 
         // Creating Credentials Object and Setting details for new user
-        Credentials newUser = new Credentials(usernameEncrypted, passwordEncrypted);
+        newUser = new Credentials(usernameEncrypted, passwordEncrypted);
 
         System.out.println("\n\nUser details processing done.\nEncrypted username: " + newUser.getUsername() + "\nEncrypted password: " + newUser.getPassword() + "");
 
-      }
+        // Create socket to connect to server
+        socket = new Socket(registServerAddress, registServerPort);
+
+        // Send to server > newUser
+        boolean result = sendToServer(newUser);
+
+        if (!result) {
+          System.out.print("Dispatch failed. Please check server connection.");
+          JOptionPane.showMessageDialog(null,"Dispatch failed. Please check server connection");
+          System.exit(0);
+        } else {
+          System.out.print("Dispatch server success.\n");
+          JOptionPane.showMessageDialog(null,"Dispatch to server success. User registration complete. You can now log in to the chat.");
+        }
+
+        result = disconnect();
+
+        if (!result){
+          System.out.print("Disconnection from server failed.");
+        } else {
+          System.out.print("Disconnection success.");
+        }
+      } // End of if (key instanceof PrivateKey)
 
     } catch (Exception e) {
-      System.out.print("Error occured while processing user details! [" + e + "]\nProgram will exit.");
+      //System.out.print("Error occured while processing user details! [" + e + "]\nProgram will exit.");
+      System.out.print( e + "\nProgram will exit.");
       System.exit(0);
     }
 
-    connectToServer();
+  } // End of main()
 
-    }
 
-    public void connectToServer() {
+    public static boolean sendToServer(Credentials newUser){
       try {
-  			socket = new Socket(registServerAddress, registServerPort);
-  		}
-  		// if it failed not much I can so
-  		catch(Exception e) {
-  			System.out.print("Error connecting to server:" + e);
-  			//return false;
-  		}
+        // Create output stream to write to server
+        sOutput = new ObjectOutputStream(socket.getOutputStream());
 
-      String msg = "Connection accepted " + socket.getInetAddress() + ":" + socket.getPort();
-      System.out.print(msg);
+        // Sending object "newUser" to server
+        sOutput.writeObject(newUser);
+
+        // Close the output stream
+        sOutput.close();
+
+        return true;
+
+      } catch (Exception e){
+        System.out.print("Error sending user details to server: " + e);
+        return false;
+      }
+    } // End of sendToServer()
+
+
+    public static boolean disconnect(){
       try {
         socket.close();
+        return true;
       }
       catch(Exception e){
         System.out.print("Error disconnecting from server: " + e);
-      //return false;
+        return false;
       }
-    //return true
-    }
 
-    // private void disconnect() {
-  	// 	try {
-  	// 		if(sInput != null) sInput.close();
-  	// 	}
-  	// 	catch(Exception e) {} // not much else I can do
-  	// 	try {
-  	// 		if(sOutput != null) sOutput.close();
-  	// 	}
-  	// 	catch(Exception e) {} // not much else I can do
-    //       try{
-  	// 		if(socket != null) socket.close();
-  	// 	}
-  	// 	catch(Exception e) {} // not much else I can do
-  	// }
+    } // End of disconnect()
 
-  }
+
+  } // End of newRegister class
