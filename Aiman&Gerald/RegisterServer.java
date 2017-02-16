@@ -30,18 +30,35 @@ public class RegisterServer{
                 //Create new I/O stream from socket
 
                 sInput = new ObjectInputStream(socket.getInputStream());
-                //sOutput =  new ObjectOutputStream(socket.getOutputStream());
-
-                //sOutput.writeObject("Success!");
-                System.out.println("Input initialized");
-
-
 
                 //Read input from Client
                 Credentials newUser = (Credentials) sInput.readObject();
 
                 String name = Crypto.bytesToStr(Crypto.decrypt_RSA(newUser.getUsername(), serverRSA.getPrivate()));
+                String passwd = Crypto.bytesToStr(Crypto.decrypt_RSA(newUser.getPassword(), serverRSA.getPrivate()));
+
+                if (file.validateName(name) == 1) {
+                    System.out.println("Invalid Username");
+
+                } else {
+
+                    byte[] salt = Crypto.secureRand(32);
+                    byte[] hashedpw = Crypto.pbkdf2(passwd, salt);
+                    String strHashed = Crypto.bytesToBase64(hashedpw);
+                    String strSalt = Crypto.bytesToBase64(salt);
+                    file.credentialWriter(name, strHashed , strSalt);
+                    System.out.println("Username Valid");
+
+                }
+
                 System.out.println("Message from Client: " + name);
+
+
+                //sOutput =  new ObjectOutputStream(socket.getOutputStream());
+
+                //sOutput.writeObject("Can");
+                //System.out.println("Message from Client: " + name);
+
                 sInput.close();
                 sOutput.close();
 
@@ -54,13 +71,6 @@ public class RegisterServer{
             return;
         }
 
-        /*
-        Credentials newUser = (Credentials) sInput.readObject();
-        byte[] username = user.getUsername();
-        byte[] password = user.getPassword();
-        */
-        //getting KeyStore Ready
-        //PKI serverRSApub = Crypto.ksPublicKey("Server.keystore", "serverrsa");
 
         //Encryption
         // byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("aiman"), serverRSApub.getPublic());
@@ -70,18 +80,6 @@ public class RegisterServer{
         // String passwd = Crypto.bytesToStr(Crypto.decrypt_RSA(password, serverRSA.getPrivate()));
 
 
-        // if (file.validateName(name) == 1) {
-        //     System.out.println("Invalid Username");
-        // } else {
-        //
-        //     byte[] salt = Crypto.secureRand(32);
-        //     byte[] hashedpw = Crypto.pbkdf2(passwd, salt);
-        //     String strHashed = Crypto.bytesToBase64(hashedpw);
-        //     String strSalt = Crypto.bytesToBase64(salt);
-        //     file.credentialWriter(name, strHashed , strSalt);
-        //     System.out.println("Username Valid");
-        //
-        // }
 
     }
 }
