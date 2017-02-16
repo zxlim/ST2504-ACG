@@ -231,8 +231,9 @@ public class Server {
 				//Receive Credentials Object from Client instance
 				final Credentials encrypted = (Credentials) sInput.readObject();
 
-				final String clientNname = Crypto.bytesToStr(Crypto.decrypt_RSA(encrypted.getUsername(), serverRSA.getPrivate()));
-				final byte[] clientPass = Crypto.bytesToStr(Crypto.decrypt_RSA(encrypted.getPassword(), serverRSA.getPrivate()));
+				final String clientName = Crypto.bytesToStr(Crypto.decrypt_RSA(encrypted.getUsername(), serverRSA.getPrivate()));
+				//final byte[] clientPass = Crypto.bytesToStr(Crypto.decrypt_RSA(encrypted.getPassword(), serverRSA.getPrivate()));
+				final String clientPass = Crypto.bytesToStr(Crypto.decrypt_RSA(encrypted.getPassword(), serverRSA.getPrivate()));
 
 				//Authenticate user credentials
 				final InputStreamReader file = new InputStreamReader(new FileInputStream("passwd"), "UTF-8");
@@ -244,12 +245,12 @@ public class Server {
 
 					final String passwdName = passwd[0];
 
-					if (strUsername.equals(passwdName)) {
+					if (clientName.equals(passwdName)) {
 
 						final String passwdPW = passwd[1];
 						final byte[] passwdSalt = Crypto.base64ToBytes(passwd[2]);
 
-						final String pwHash = Crypto.bytesToBase64(Crypto.pbkdf2(strPassword, passwdSalt));
+						final String pwHash = Crypto.bytesToBase64(Crypto.pbkdf2(clientPass, passwdSalt));
 
 						if (pwHash.equals(passwdPW)) {
 							line = null;
@@ -270,7 +271,7 @@ public class Server {
 							final byte[] signature = Crypto.sign_ECDSA(Crypto.strToBytes("False"), serverECDSA.getPrivate());
 							sOutput.writeObject(new Message(Message.LOGIN, Crypto.strToBytes("False"), signature));
 
-							display(strUsername + " failed to authenticate.");
+							display(clientName + " failed to authenticate.");
 
 							file.close();
 							return false;
@@ -296,11 +297,11 @@ public class Server {
 				return;
 			}
 
-			// if (!encryptConnection()) {
-			// 	display("[Error] Failed to secure connection with " + username + ".");
-			// 	display("[Error] Terminated connection with client " + username + ".\n");
-			// 	keepGoing = false;
-			// }
+			if (!encryptConnection()) {
+				display("[Error] Failed to secure connection with " + username + ".");
+				display("[Error] Terminated connection with client " + username + ".\n");
+				keepGoing = false;
+			}
 
 			while(keepGoing) {
 				try {
@@ -391,9 +392,44 @@ public class Server {
 
 		private boolean encryptConnection() {
 			try {
+
 				display("Securing connection with " + username + "...");
+				/*Time for handshake*/
+				Message session = (Message) sInput.readObject();
+				System.out.println("Handshake started");
+				sessionKey = Crypto.decrypt_RSA(session.getMessage(),serverRSA.getPrivate());
+				final boolean verifySession = Crypto.verify_ECDSA(sessionKey,clientECDSA.getPublic(),session.getSignature());
+
+				/*sending a message*/
+				if (verifySession) {
+					//send aes
+					AES encryptedAES = Crypto.encrypt_AES(Crypto.strToBytes("PPAP Secured"),sessionKey);
+					//sign original
+					byte[] sig = Crypto.sign_ECDSA(Crypto.strToBytes("PPAP Secured"),serverECDSA.getPrivate());
+					Message checkVerified = new Message(Message.HANDSHAKE,encryptedAES,sig);
+					sOutput.writeObject(checkVerified);
+					System.out.println("Sent checkVerified");
+
+					Message sessionRound2 = (Message) sInput.readObject();
+					byte[] decryptMsg = Crypto.decrypt_AES(sessionRound2.getEncrypted(),sessionKey);
+
+					if (Crypto.bytesToStr(decryptMsg).equals("ppapClient-OK!")){
+						AES encryptedAES2 = Crypto.encrypt_AES(Crypto.strToBytes("HANDSHAKE_Established"),sessionKey);
+						byte[] sig2 = Crypto.sign_ECDSA(Crypto.strToBytes("HANDSHAKE_Established"),serverECDSA.getPrivate());
+						Message checkVerified2 = new Message(Message.HANDSHAKE, encryptedAES2,sig2);
+						sOutput.writeObject(checkVerified2);
+						System.out.println("Sent checkVerified2");
+						return true;
+					} else {
+						return false;
+					}
+
+				} else {
+					return false;
+				}
+
 				//To be completed. Client-Server encryption process and handshake in here.
-				return false;
+				//return false;
 			} catch (Exception e) {
 				display("[Error] Failed to establish a secure connection.");
 				return false;
