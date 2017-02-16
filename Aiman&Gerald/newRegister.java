@@ -108,40 +108,27 @@ public class newRegister {
 
     System.out.println("User details successfully completed.\nProcessing details now.. please wait.");
 
-    // Reading from keystore
-    FileInputStream is = new FileInputStream("ServerKeyStore");
-
-    KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
-    keystore.load(is, "1qwer$#@!".toCharArray());
-
-    String alias = "serverrsa";
-
-    Key key = keystore.getKey(alias, "1qwer$#@!".toCharArray());
-
-    if (key instanceof PrivateKey) {
-
-        // Get certificate of public key
-        Certificate cert = keystore.getCertificate(alias);
-
-        // Get servers' public key
-        PublicKey serverPubKey = cert.getPublicKey();
+        PKI serverRSA = Crypto.ksPublicKey("Client.keystore", "serverrsa");
 
         // Converting String to Bytes
         byte[] usernameInBytes = Crypto.strToBytes(username);
         byte[] passwordInBytes = Crypto.strToBytes(password);
 
         // Encrypt using public RSA
-        byte[] usernameEncrypted = Crypto.encrypt_RSA(usernameInBytes, serverPubKey);
-        byte[] passwordEncrypted = Crypto.encrypt_RSA(passwordInBytes, serverPubKey);
+        byte[] usernameEncrypted = Crypto.encrypt_RSA(usernameInBytes, serverRSA.getPublic());
+        byte[] passwordEncrypted = Crypto.encrypt_RSA(passwordInBytes, serverRSA.getPublic());
 
         // Creating Credentials Object and Setting details for new user
         newUser = new Credentials(usernameEncrypted, passwordEncrypted);
 
         System.out.println("\n\nUser details processing done.\nEncrypted username: " + newUser.getUsername() + "\nEncrypted password: " + newUser.getPassword() + "");
 
+        try {
         // Create socket to connect to server
         socket = new Socket(registServerAddress, registServerPort);
-
+      } catch (Exception e){
+        System.out.print("Socket error: " + e);
+      }
         // Send to server > newUser
         boolean result = sendToServer(newUser);
 
@@ -161,7 +148,7 @@ public class newRegister {
         } else {
           System.out.print("Disconnection success.");
         }
-      } // End of if (key instanceof PrivateKey)
+
 
     } catch (Exception e) {
       //System.out.print("Error occured while processing user details! [" + e + "]\nProgram will exit.");
