@@ -3,6 +3,8 @@ import javax.swing.JOptionPane;
 import java.net.*;
 import java.io.*;
 import java.security.Key;
+import java.lang.*;
+
 
 //import java.security.KeyPair;
 import java.security.KeyStore;
@@ -121,34 +123,41 @@ public class newRegister {
         // Creating Credentials Object and Setting details for new user
         newUser = new Credentials(usernameEncrypted, passwordEncrypted);
 
-        System.out.println("\n\nUser details processing done.\nEncrypted username: " + newUser.getUsername() + "\nEncrypted password: " + newUser.getPassword() + "");
+        //System.out.println("\n\nUser details processing done.\nEncrypted username: " + newUser.getUsername() + "\nEncrypted password: " + newUser.getPassword() + "");
 
-        try {
         // Create socket to connect to server
         socket = new Socket(registServerAddress, registServerPort);
-      } catch (Exception e){
-        System.out.print("Socket error: " + e);
-      }
+
         // Send to server > newUser
         boolean result = sendToServer(newUser);
 
         if (!result) {
-          System.out.print("Dispatch failed. Please check server connection.");
+          System.out.print("Dispatch failed. Please check server connection.\n");
           JOptionPane.showMessageDialog(null,"Dispatch failed. Please check server connection");
           System.exit(0);
         } else {
           System.out.print("Dispatch server success.\n");
-          JOptionPane.showMessageDialog(null,"Dispatch to server success. User registration complete. You can now log in to the chat.");
+          JOptionPane.showMessageDialog(null,"Dispatch to server success.");
         }
+
+        // // Retrieve result from server
+        // boolean checkResult = checkValid();
+        //
+        // if (!checkResult){
+        //   System.out.print("\nValidation failed. Your username is taken. Please use another username.\n");
+        //   JOptionPane.showMessageDialog(null,"Your username is taken. Please use another username.\n");
+        // } else {
+        //   System.out.print("\nValidation passed.\n");
+        //   JOptionPane.showMessageDialog(null,"User registration complete. You can now log in to the chat.\n");
+        // }
 
         result = disconnect();
 
         if (!result){
-          System.out.print("Disconnection from server failed.");
+          System.out.print("Disconnection from server failed.\n");
         } else {
-          System.out.print("Disconnection success.");
+          System.out.print("Disconnection success.\n");
         }
-
 
     } catch (Exception e) {
       //System.out.print("Error occured while processing user details! [" + e + "]\nProgram will exit.");
@@ -177,6 +186,37 @@ public class newRegister {
         return false;
       }
     } // End of sendToServer()
+
+
+    // public static boolean checkValid(){
+    //
+    //   System.out.print("Checking for validity...");
+    //   boolean go = true;
+    //   String checkReturn = "";
+    //
+    //   try {
+    //     while (go) {
+    //
+    //       sInput = new ObjectInputStream(socket.getInputStream());
+    //
+    //       checkReturn = (String) sInput.readObject();
+    //
+    //       System.out.print(checkReturn);
+    //
+    //       sInput.close();
+    //
+    //       if (checkReturn.equals("cat")){
+    //         return true;
+    //       } else {
+    //         return false;
+    //       }
+    //     }
+    //   } catch (Exception e){
+    //     System.out.print("\n" + e);
+    //     return false;
+    //   }
+    //   return false;
+    // } // End of checkValid()
 
 
     public static boolean disconnect(){
