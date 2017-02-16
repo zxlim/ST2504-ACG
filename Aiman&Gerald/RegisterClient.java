@@ -148,7 +148,7 @@ public class newRegister {
           JOptionPane.showMessageDialog(null,"Dispatch failed. Please check server connection");
           System.exit(0);
         } else {
-          System.out.print("\nDispatch to server success.\n");
+          System.out.print("\nDispatch to server success. Please wait..\n");
           JOptionPane.showMessageDialog(null,"Dispatch to server success.");
         }
 
@@ -203,9 +203,6 @@ public class newRegister {
         // Sending object "newUser" to server
         sOutput.writeObject(newUser);
 
-        // Close the output stream
-        sOutput.close();
-
         return true;
 
       } catch (Exception e){
@@ -217,7 +214,7 @@ public class newRegister {
 
     public static boolean checkValid(){
       try {
-      Thread.sleep(5000);
+      Thread.sleep(1000);
       } catch (Exception eSleep){
         System.out.print("Error in sleep: " + eSleep);
       }
@@ -227,7 +224,7 @@ public class newRegister {
       try {
         // Create input stream
         try {
-          System.out.print("Initialising Input stream...");
+          System.out.print("Initialising Input stream...\n\n");
         //sOutput = new ObjectOutputStream(socket.getOutputStream());
         sInput = new ObjectInputStream(socket.getInputStream());
         } catch (Exception eStream) {
@@ -235,11 +232,8 @@ public class newRegister {
           System.exit(0);
         }
       checkReturn = (String) sInput.readObject();
-      System.out.print("\nInputStream read.");
-      System.out.print(checkReturn);
-      sInput.close();
 
-          if (checkReturn.equals("cat")){
+          if (checkReturn.equals("Success")){
             return true;
           } else {
             return false;
@@ -255,6 +249,8 @@ public class newRegister {
 
     public static boolean disconnect(){
       try {
+        sInput.close();
+        sOutput.close();
         socket.close();
         return true;
       }
