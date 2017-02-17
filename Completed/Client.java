@@ -280,7 +280,7 @@ public class Client  {
 	//Send message to Server (GUI mode)
 	void sendMessageGUI(final String msg) {
 
-		if ((msg.split("\\s+"))[0].equalsIgnoreCase("/WHISPER")) {
+		if ((msg.split("\\s+"))[0].equalsIgnoreCase("/WHISPER") || (msg.split("\\s+"))[0].equalsIgnoreCase("/W")) {
 			//If whisper
 			sendMessage(whisper(msg.split("\\s+")));
 		} else {
