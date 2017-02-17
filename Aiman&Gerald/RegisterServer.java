@@ -1,6 +1,7 @@
 //import java.io.FileInputStream;
 
 import java.io.*;
+import java.util.Scanner;
 import java.net.*;
 
 
@@ -17,14 +18,22 @@ public class RegisterServer{
             ServerSocket serverSocket = new ServerSocket(port);
             System.out.println("Listening on port: " + port);
 
+            boolean acceptingConnections = true;
+            boolean awaitingOption = true;
+
+            //Start scanner instance
+            Scanner scan = new Scanner(System.in);
+
             // Retrieving server private key
             PKI serverRSA = Crypto.ksPrivateKey("Server.keystore", "serverrsa");
 
             System.out.println("Enter Ctrl-C to stop the server.");
 
-            // Start of accepting connections loop
-            while(true){
 
+            // Start of accepting connections loop
+            while(acceptingConnections){
+
+              awaitingOption = true;
               System.out.println("\nServer accepting registration clients now..");
                 // Accept client connection
                 socket = serverSocket.accept();
@@ -55,18 +64,36 @@ public class RegisterServer{
                     String strHashed = Crypto.bytesToBase64(hashedpw);
                     String strSalt = Crypto.bytesToBase64(salt);
                     file.credentialWriter(username, strHashed , strSalt);
-                    System.out.println("\n\t" + username + " registration completed.");
+                    System.out.println("\n\t[" + username + "] registration completed.");
 
                     // Sending client "Success"
                     sOutput.writeObject("Success");
                 }
 
+                System.out.println("\nDo you want to continue? Enter YES/NO to continue/disconnect.");
+
+                while (awaitingOption){
+                      String continueAcception = scan.nextLine();
+
+                      if (continueAcception.equalsIgnoreCase("yes")){
+                        System.out.print("\nContinuing connection...");
+                        acceptingConnections = true;
+                        awaitingOption = false;
+                      } else if (continueAcception.equalsIgnoreCase("no")){
+                        System.out.print("\nDisconnecting...");
+                        acceptingConnections = false;
+                        awaitingOption = false;
+                      } else {
+                        System.out.print("\nEnter YES or NO to continue accepting connections or disconnect.");
+                      }
+
+                }
             }
 
-            //System.out.println("Server disconnected.");
-            // sOutput.close();
-            // sInput.close();
-            // socket.close();
+            System.out.println("\nServer disconnected.");
+            sOutput.close();
+            sInput.close();
+            socket.close();
 
         } catch (Exception e) {
             return;

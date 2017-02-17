@@ -169,7 +169,7 @@ public class RegisterClient {
         boolean checkResult = checkValid();
 
         if (!checkResult){
-          System.out.print("\nValidation failed. Your username is taken. Please use another username.\n");
+          System.out.print("\nValidation failed. Your username is taken. Please use another username.\n Program will now exit.");
           JOptionPane.showMessageDialog(null,"Your username is taken. Please use another username.\n");
         } else {
           System.out.print("\nValidation passed.\nYou can now log in to the chat.\n");
