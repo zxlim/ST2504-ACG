@@ -18,4 +18,6 @@ To start a chat server locally, use the ServerGUI program. Alternately you may u
 
 To connect to the server as a client user, use the ClientGUI program. Alternately you may use the Client program if you wish to run it in console mode (command-line).
 
+Usernames are case-sensitive. When using actions like whispers that require username, do take note of the case of the name.
+
 All cryptographic-related functions are located in Crypto.java.
