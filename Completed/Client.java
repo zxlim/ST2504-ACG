@@ -304,13 +304,13 @@ public class Client  {
 
 		for (int i = 0; i < msg.length; i++) {
 			if (i >= 2) {
-				message += msg[i];
+				message += msg[i] + " ";
 			}
 		}
 
-		display("[Whisper to " + receiver + "] " + message);
+		display("[Whisper to " + receiver + "] " + message.trim());
 
-		final String encodedMessage = Crypto.strToBase64("[Whisper from " + sender + "] " + message);
+		final String encodedMessage = Crypto.strToBase64("[Whisper from " + sender + "] " + message.trim());
 
 		final byte[] plaintext = Crypto.strToBytes(receiver + ":" + encodedMessage);
 
