@@ -53,7 +53,7 @@ public class RegisterServer{
                 String username = Crypto.bytesToStr(Crypto.decrypt_RSA(newUser.getUsername(), serverRSA.getPrivate()));
                 String password = Crypto.bytesToStr(Crypto.decrypt_RSA(newUser.getPassword(), serverRSA.getPrivate()));
 
-                if (file.validateName(username) == 1) {
+                if (File.validateName(username) == 1) {
                     System.out.println("\n\tInvalid Username: [" + username + "] already exists.");
                     System.out.println("\tFailed to Register. Rejecting user registration.\n");
 
@@ -65,7 +65,7 @@ public class RegisterServer{
                     byte[] hashedpw = Crypto.pbkdf2(password, salt);
                     String strHashed = Crypto.bytesToBase64(hashedpw);
                     String strSalt = Crypto.bytesToBase64(salt);
-                    file.credentialWriter(username, strHashed , strSalt);
+                    File.credentialWriter(username, strHashed , strSalt);
                     System.out.println("\n\t[" + username + "] registration completed.\n");
 
                     // Sending client "Success"
