@@ -16,7 +16,7 @@ public class RegisterServer{
 
         try {
             ServerSocket serverSocket = new ServerSocket(port);
-            System.out.println("Listening on port: " + port);
+
 
             boolean acceptingConnections = true;
             boolean awaitingOption = true;
@@ -24,17 +24,19 @@ public class RegisterServer{
             //Start scanner instance
             Scanner scan = new Scanner(System.in);
 
-            // Retrieving server private key
-            PKI serverRSA = Crypto.ksPrivateKey("Server.keystore", "serverrsa");
 
-            System.out.println("Enter Ctrl-C to stop the server.");
 
 
             // Start of accepting connections loop
             while(acceptingConnections){
+                // Retrieving server private key
+                System.out.println("Listening on port: " + port);
+                PKI serverRSA = Crypto.ksPrivateKey("Server.keystore", "serverrsa");
 
-              awaitingOption = true;
-              System.out.println("\nServer accepting registration clients now..");
+                System.out.println("Enter Ctrl-C to stop the server.");
+
+                awaitingOption = true;
+                System.out.println("\nServer accepting registration clients now..");
                 // Accept client connection
                 socket = serverSocket.accept();
                 String clientIP = socket.getLocalSocketAddress().toString();
@@ -53,7 +55,7 @@ public class RegisterServer{
 
                 if (file.validateName(username) == 1) {
                     System.out.println("\n\tInvalid Username: [" + username + "] already exists.");
-                    System.out.println("\tFailed to Register. Rejecting user registration.");
+                    System.out.println("\tFailed to Register. Rejecting user registration.\n");
 
                     // Sending client "Failure"
                     sOutput.writeObject("Failure");
@@ -64,51 +66,52 @@ public class RegisterServer{
                     String strHashed = Crypto.bytesToBase64(hashedpw);
                     String strSalt = Crypto.bytesToBase64(salt);
                     file.credentialWriter(username, strHashed , strSalt);
-                    System.out.println("\n\t[" + username + "] registration completed.");
+                    System.out.println("\n\t[" + username + "] registration completed.\n");
 
                     // Sending client "Success"
                     sOutput.writeObject("Success");
                 }
-
+                /*
                 System.out.println("\nDo you want to continue? Enter YES/NO to continue/disconnect.");
 
                 while (awaitingOption){
-                      String continueAcception = scan.nextLine();
+                String continueAcception = scan.nextLine();
 
-                      if (continueAcception.equalsIgnoreCase("yes")){
-                        System.out.print("\nContinuing connection...");
-                        acceptingConnections = true;
-                        awaitingOption = false;
-                      } else if (continueAcception.equalsIgnoreCase("no")){
-                        System.out.print("\nDisconnecting...");
-                        acceptingConnections = false;
-                        awaitingOption = false;
-                      } else {
-                        System.out.print("\nEnter YES or NO to continue accepting connections or disconnect.");
-                      }
-
-                }
-            }
-
-            System.out.println("\nServer disconnected.");
-            sOutput.close();
-            sInput.close();
-            socket.close();
-
-        } catch (Exception e) {
-            return;
-        }
-
-
-
-        //Encryption
-        // byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("aiman"), serverRSApub.getPublic());
-        // byte[] password = Crypto.encrypt_RSA(Crypto.strToBytes("1qwe#@!"), serverRSApub.getPublic());
-        // //Name Decryption
-        // String name = Crypto.bytesToStr(Crypto.decrypt_RSA(username, serverRSA.getPrivate()));
-        // String passwd = Crypto.bytesToStr(Crypto.decrypt_RSA(password, serverRSA.getPrivate()));
-
-
-
+                if (continueAcception.equalsIgnoreCase("yes")){
+                System.out.print("\nContinuing connection...");
+                acceptingConnections = true;
+                awaitingOption = false;
+            } else if (continueAcception.equalsIgnoreCase("no")){
+            System.out.print("\nDisconnecting...");
+            acceptingConnections = false;
+            awaitingOption = false;
+        } else {
+        System.out.print("\nEnter YES or NO to continue accepting connections or disconnect.");
     }
+
+}
+*/
+}
+/*
+System.out.println("\nServer disconnected.");
+sOutput.close();
+sInput.close();
+socket.close();
+*/
+} catch (Exception e) {
+    return;
+}
+
+
+
+//Encryption
+// byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("aiman"), serverRSApub.getPublic());
+// byte[] password = Crypto.encrypt_RSA(Crypto.strToBytes("1qwe#@!"), serverRSApub.getPublic());
+// //Name Decryption
+// String name = Crypto.bytesToStr(Crypto.decrypt_RSA(username, serverRSA.getPrivate()));
+// String passwd = Crypto.bytesToStr(Crypto.decrypt_RSA(password, serverRSA.getPrivate()));
+
+
+
+}
 }

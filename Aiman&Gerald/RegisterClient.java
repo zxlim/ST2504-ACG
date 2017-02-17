@@ -138,7 +138,7 @@ public class RegisterClient {
         // Creating Credentials Object and Setting details for new user
         newUser = new Credentials(usernameEncrypted, passwordEncrypted);
 
-        System.out.println("\n\nUser details processing done.\nEncrypted username: " + newUser.getUsername() + "\nEncrypted password: " + newUser.getPassword() + "");
+        //System.out.println("\n\nUser details processing done.\nEncrypted username: " + newUser.getUsername() + "\nEncrypted password: " + newUser.getPassword() + "");
 
         // Create socket to connect to server
         try {
