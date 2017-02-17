@@ -97,6 +97,8 @@ public class RegisterClient {
               JOptionPane.showMessageDialog(null,"You did not enter a username. Please try again.");
             } else if (username.contains(":")) {
               JOptionPane.showMessageDialog(null,"A \":\" has been detected in your username. Please try again.");
+            } else if (username.contains(" ")) {
+              JOptionPane.showMessageDialog(null,"Your username cannot have spaces within. Please try again.");
             } else {
               usernameInput = true;
               // Password complexity check
