@@ -35,7 +35,7 @@ public class Server {
 		this.port = port;
 		this.sg = sg;
 
-		sdf = new SimpleDateFormat("HH:mm:ss");
+		sdf = new SimpleDateFormat("HH:mm");
 		clientList = new ArrayList<ClientThread>();
 	}
 
@@ -137,12 +137,46 @@ public class Server {
 			byte[] signat = Crypto.sign_ECDSA(Crypto.strToBytes(messageLf),serverECDSA.getPrivate());
 			Message messageLfM = new Message(Message.MESSAGE,Crypto.encrypt_AES(Crypto.strToBytes(messageLf),clientSessionKey),signat);
 
-			if (!clientThread.writeMsgM(messageLfM)) {
+			if (!clientThread.writeMsgObject(messageLfM)) {
 				clientList.remove(i);
 				display("Disconnected Client " + clientThread.username + " removed from list.");
 			}
 		}
 	} //broadcast
+
+	private void whisper(final String[] msg) {
+
+		for (int i = clientList.size(); --i >= 0;) {
+			final ClientThread clientThread = clientList.get(i);
+
+			if (clientThread.username.equals(msg[0])) {
+				//Add timestamp to message
+				final String time = sdf.format(new Date());
+				final String decodedMessage = Crypto.base64ToStr(msg[1]);
+				final String message = time + " " + decodedMessage + "\n";
+
+				final byte[] clientSessionKey = clientThread.sessionKey;
+
+				final byte[] signature = Crypto.sign_ECDSA(Crypto.strToBytes(message),serverECDSA.getPrivate());
+				final Message whisperMsg = new Message(Message.WHISPER, Crypto.encrypt_AES(Crypto.strToBytes(message), clientSessionKey), signature);
+
+				if (!clientThread.writeMsgObject(whisperMsg)) {
+					clientList.remove(i);
+					display("[Error] Failed to send a whisper message to " + clientThread.username + ".");
+					display("Disconnected Client " + clientThread.username + " removed from list.");
+				} else {
+					if (sg == null) {
+						//Console mode
+						System.out.println("A whisper message has been sent successfully.");
+					} else {
+						//GUI mode
+						sg.appendRoom("A whisper message has been sent successfully.");
+					}
+				}
+				break;
+			}
+		}
+	} //whisper
 
 	//Client logout
 	synchronized void remove(final int id) {
@@ -322,21 +356,31 @@ public class Server {
 					case Message.MESSAGE:
 					final byte[] plaintext = Crypto.decrypt_AES(m.getEncrypted(), sessionKey);
 					final boolean verifySig = Crypto.verify_ECDSA(plaintext, clientECDSA.getPublic(), m.getSignature());
-					byte[] signa = Crypto.sign_ECDSA(plaintext,serverECDSA.getPrivate());
-					Message send = new Message(Message.MESSAGE,Crypto.encrypt_AES(plaintext,sessionKey),signa);
 
 					if (verifySig) {
-						broadcast(username + ": " + Crypto.bytesToStr(plaintext));
+						broadcast("[" + username + "] " + Crypto.bytesToStr(plaintext));
+					} else {
+						display("[Error] Verification of " + username + "\'s digital Signature failed.\n");
+					}
+					break;
+					case Message.WHISPER:
+					display("Whisper message received. Forwarding...");
+					final String whisperDecrypted = Crypto.bytesToStr(Crypto.decrypt_AES(m.getEncrypted(), sessionKey));
+					final boolean verifySigature = Crypto.verify_ECDSA(Crypto.strToBytes(whisperDecrypted), clientECDSA.getPublic(), m.getSignature());
+
+					if (verifySigature) {
+						whisper(whisperDecrypted.split(":"));
 					} else {
 						display("[Error] Verification of " + username + "\'s digital Signature failed.\n");
 					}
 					break;
 					case Message.WHOISIN:
-					writeMsg("List of the users connected at " + sdf.format(new Date()) + "\n");
+					String listUsers = "List of the users connected at " + sdf.format(new Date()) + "\n";
 					for (int i = 0; i < clientList.size(); ++i) {
 						ClientThread clientThread = clientList.get(i);
-						writeMsg("[" + (i+1) + "] " + clientThread.username + " since " + clientThread.date);
+						listUsers += "[" + (i+1) + "] " + clientThread.username + " since " + clientThread.date;
 					}
+					writeMsg(Message.WHOISIN, listUsers);
 					break;
 					case Message.LOGOUT:
 					display(username + " logged out of the chat server.");
@@ -383,14 +427,14 @@ public class Server {
 		} //close
 
 		//Send a message to client
-		private boolean writeMsg(final String msg) {
+		private boolean writeMsg(final int type, final String msg) {
 			if (!socket.isConnected()) {
 				close();
 				return false;
 			}
-			//final byte[] clientSessionKey = clientThread.sessionKey;
-			byte[] signat = Crypto.sign_ECDSA(Crypto.strToBytes(msg),serverECDSA.getPrivate());
-			Message send = new Message(Message.WHOISIN,Crypto.encrypt_AES(Crypto.strToBytes(msg),sessionKey),signat);
+
+			final byte[] signature = Crypto.sign_ECDSA(Crypto.strToBytes(msg),serverECDSA.getPrivate());
+			final Message send = new Message(type, Crypto.encrypt_AES(Crypto.strToBytes(msg), sessionKey), signature);
 
 			try {
 				sOutput.writeObject(send);
@@ -402,7 +446,7 @@ public class Server {
 		} //writeMsg
 
 		//To write a message using Message object
-		private boolean writeMsgM(final Message msg) {
+		private boolean writeMsgObject(final Message msg) {
 			if (!socket.isConnected()) {
 				close();
 				return false;
@@ -415,9 +459,7 @@ public class Server {
 				display(e.toString());
 			}
 			return true;
-		} //writeMsg
-
-
+		} //writeMsgObject
 
 		private boolean encryptConnection() {
 			try {

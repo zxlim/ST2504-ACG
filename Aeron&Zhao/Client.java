@@ -26,7 +26,7 @@ public class Client  {
 	private String server;
 	private int port;
 	private ClientGUI cg;
-	private String nameGUI;
+	private String username;
 	private String pwGUI;
 
 	//Encryption and Handshake variables
@@ -37,11 +37,11 @@ public class Client  {
 	private static final PKI serverECDSA = Crypto.ksPublicKey("Client.keystore", "serverECDSA");
 
 	//Constructor
-	Client(final String server, final int port, final ClientGUI cg, final String nameGUI, final String pwGUI) {
+	Client(final String server, final int port, final ClientGUI cg, final String username, final String pwGUI) {
 		this.server = server;
 		this.port = port;
 		this.cg = cg;
-		this.nameGUI = nameGUI;
+		this.username = username;
 		this.pwGUI = pwGUI;
 	}
 
@@ -172,10 +172,12 @@ public class Client  {
 
 			final String password = new String(System.console().readPassword("Password: "));
 
-			if (userName == null || userName.isEmpty()) {
-				System.out.println("Username cannot be left empty.");
+			if (userName == null || userName.isEmpty() || password == null || password.isEmpty()) {
+				System.out.println("Username and/ or password cannot be left empty.");
 				return null;
 			}
+
+			this.username = userName;
 
 			System.out.println("Logging in as " + userName + "...");
 
@@ -192,7 +194,7 @@ public class Client  {
 			return new Credentials(encUsername, encPassword, encRSA, encECDSA);
 		} else {
 			//GUI mode
-			final byte[] encUsername = Crypto.encrypt_RSA(Crypto.strToBytes(nameGUI), serverRSA.getPublic());
+			final byte[] encUsername = Crypto.encrypt_RSA(Crypto.strToBytes(username), serverRSA.getPublic());
 			final byte[] encPassword = Crypto.encrypt_RSA(Crypto.strToBytes(pwGUI), serverRSA.getPublic());
 
 			//Generate new RSA (For encryption) and ECDSA (For digital signature) Keypairs
@@ -278,16 +280,39 @@ public class Client  {
 	//Send message to Server (GUI mode)
 	void sendMessageGUI(final String msg) {
 
-		final byte[] plaintext = Crypto.strToBytes(msg);
+		if ((msg.split("\\s+"))[0].equalsIgnoreCase("/WHISPER")) {
+			//If whisper
+			sendMessage(whisper(msg.split("\\s+")));
+		} else {
+			//Send as normal message
+			final byte[] plaintext = Crypto.strToBytes(msg);
+			final AES ciphertext = Crypto.encrypt_AES(plaintext, sessionKey);
+			final byte[] signature = Crypto.sign_ECDSA(plaintext, clientECDSA.getPrivate());
+
+			try {
+				sOutput.writeObject(new Message(Message.MESSAGE, ciphertext, signature));
+			} catch(IOException e) {
+				display("Exception writing to server: " + e);
+			}
+		}
+	} //sendMessageGUI
+
+	private Message whisper(final String[] msg) {
+		final String receiver = msg[1].trim();
+		final String sender = this.username;
+		final String message = msg[2].trim();
+
+		display("[Whisper to " + receiver + "] " + message);
+
+		final String encodedMessage = Crypto.strToBase64("[Whisper from " + sender + "] " + message);
+
+		final byte[] plaintext = Crypto.strToBytes(receiver + ":" + encodedMessage);
+
 		final AES ciphertext = Crypto.encrypt_AES(plaintext, sessionKey);
 		final byte[] signature = Crypto.sign_ECDSA(plaintext, clientECDSA.getPrivate());
 
-		try {
-			sOutput.writeObject(new Message(Message.MESSAGE, ciphertext, signature));
-		} catch(IOException e) {
-			display("Exception writing to server: " + e);
-		}
-	} //sendMessageGUI
+		return new Message(Message.WHISPER, ciphertext, signature);
+	}
 
 	//Close I/O Streams and Socket to disconnect Client
 	private void disconnect() {
@@ -358,7 +383,7 @@ public class Client  {
 
 		//Loop forever
 		while(true) {
-			System.out.print("Message: ");
+			System.out.print("> ");
 			final String inputMsg = scan.nextLine();
 			final String msg = inputMsg.trim();
 
@@ -375,8 +400,9 @@ public class Client  {
 				//Show who is in when message is /LIST
 				client.sendMessage(new Message(Message.WHOISIN));
 			} else if ((msg.split("\\s+"))[0].equalsIgnoreCase("/WHISPER")) {
-
-				System.out.println("Whisper feature is under construction");
+				final Message whisperMsg = client.whisper(msg.split("\\s+"));
+				client.sendMessage(whisperMsg);
+				System.out.println("Whisper message sent.");
 			} else if (msg.equalsIgnoreCase("/LOGOUT")) {
 				//Logout if message is /LOGOUT
 				client.sendMessage(new Message(Message.LOGOUT));
@@ -407,11 +433,16 @@ public class Client  {
 					final boolean verifySig = Crypto.verify_ECDSA(plaintext, serverECDSA.getPublic(), m.getSignature());
 
 					if (verifySig) {
-						display(Crypto.bytesToStr(plaintext));
+						if (m.getType() == Message.WHISPER) {
+							final String decodedMessage = Crypto.base64ToStr(Crypto.bytesToBase64(plaintext));
+							display(decodedMessage);
+						} else {
+							display(Crypto.bytesToStr(plaintext));
+						}
 
 						if(cg == null) {
 							//Console mode
-							System.out.print("> ");
+							System.out.print("Message: ");
 						}
 					} else {
 						//Signature verification of message failed

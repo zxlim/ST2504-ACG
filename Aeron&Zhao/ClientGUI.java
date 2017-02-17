@@ -217,7 +217,7 @@ public class ClientGUI extends JFrame implements ActionListener{
 		}
 
 		if (objEvent == sendMsg || connected) {
-			client.sendMessageGUI(messageField.getText());
+			client.sendMessageGUI(messageField.getText().trim());
 			messageField.setText("");
 			return;
 		}

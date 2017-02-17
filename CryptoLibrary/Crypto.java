@@ -320,4 +320,24 @@ public class Crypto {
 			return null;
 		}
 	}
+
+	static String strToBase64(final String input) {
+		try {
+			return Base64.getEncoder().encodeToString(strToBytes(input));
+		} catch (Exception e) {
+			System.out.println("Exception occured: " + e + "\n");
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	static String base64ToStr(final String input) {
+		try {
+			return new String (Base64.getDecoder().decode(input));
+		} catch (Exception e) {
+			System.out.println("Exception occured: " + e + "\n");
+			e.printStackTrace();
+			return null;
+		}
+	}
 } //class
