@@ -165,13 +165,7 @@ public class Server {
 					display("[Error] Failed to send a whisper message to " + clientThread.username + ".");
 					display("Disconnected Client " + clientThread.username + " removed from list.");
 				} else {
-					if (sg == null) {
-						//Console mode
-						System.out.println("A whisper message has been sent successfully.");
-					} else {
-						//GUI mode
-						sg.appendRoom("A whisper message has been sent successfully.\n");
-					}
+					display("A whisper message has been sent successfully.");
 				}
 				break;
 			}
@@ -270,7 +264,6 @@ public class Server {
 				final Credentials encrypted = (Credentials) sInput.readObject();
 
 				final String clientName = Crypto.bytesToStr(Crypto.decrypt_RSA(encrypted.getUsername(), serverRSA.getPrivate()));
-				//final byte[] clientPass = Crypto.bytesToStr(Crypto.decrypt_RSA(encrypted.getPassword(), serverRSA.getPrivate()));
 				final String clientPass = Crypto.bytesToStr(Crypto.decrypt_RSA(encrypted.getPassword(), serverRSA.getPrivate()));
 
 				//Authenticate user credentials
@@ -309,13 +302,13 @@ public class Server {
 							final byte[] signature = Crypto.sign_ECDSA(Crypto.strToBytes("False"), serverECDSA.getPrivate());
 							sOutput.writeObject(new Message(Message.LOGIN, Crypto.strToBytes("False"), signature));
 
-							display(clientName + " failed to authenticate.");
+							display(clientName + " failed to authenticate.\n");
 
 							file.close();
 							return false;
 						}
-					}
-				}
+					} //If
+				} //While loop
 
 				file.close();
 				return false;
@@ -474,12 +467,13 @@ public class Server {
 				/*sending a message*/
 				if (verifySession) {
 					//send aes
+					display("Session key received and verified.");
+					display("Exchanging handshake...");
 					AES encryptedAES = Crypto.encrypt_AES(Crypto.strToBytes("PPAP Secured"),sessionKey);
 					//sign original
 					byte[] sig = Crypto.sign_ECDSA(Crypto.strToBytes("PPAP Secured"),serverECDSA.getPrivate());
 					Message checkVerified = new Message(Message.HANDSHAKE,encryptedAES,sig);
 					sOutput.writeObject(checkVerified);
-					//System.out.println("Sent checkVerified");
 
 					Message sessionRound2 = (Message) sInput.readObject();
 					byte[] decryptMsg = Crypto.decrypt_AES(sessionRound2.getEncrypted(),sessionKey);
@@ -489,21 +483,18 @@ public class Server {
 						byte[] sig2 = Crypto.sign_ECDSA(Crypto.strToBytes("HANDSHAKE_Established"),serverECDSA.getPrivate());
 						Message checkVerified2 = new Message(Message.HANDSHAKE, encryptedAES2,sig2);
 						sOutput.writeObject(checkVerified2);
-						//System.out.println("Sent checkVerified2");
+						display("Connection with " + username + " secured with AES-" + (sessionKey.length * 8) + ".\n");
 						return true;
 					} else {
 						return false;
 					}
-
 				} else {
 					return false;
 				}
-
-				//return false;
 			} catch (Exception e) {
-				display("[Error] Failed to establish a secure connection.");
+				display("[Error] Failed to establish a secure connection.\n");
 				return false;
 			}
-		}
+		} //encryptConnection();
 	} //Subclass ClientThread
 } //class

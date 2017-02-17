@@ -1,7 +1,14 @@
-//import java.io.FileInputStream;
+/*
+**	[ST2504 Applied Cryptography Assignment]
+**	[Encrypted Chat Program]
+**
+**	Aeron Teo (P1500725)
+**	Aiman Abdul Rashid (P1529335)
+**	Gerald Peh (P1445972)
+**	Lim Zhao Xiang (P1529559)
+*/
 
 import java.io.*;
-import java.util.Scanner;
 import java.net.*;
 
 
@@ -20,12 +27,6 @@ public class RegisterServer{
 
             boolean acceptingConnections = true;
             boolean awaitingOption = true;
-
-            //Start scanner instance
-            Scanner scan = new Scanner(System.in);
-
-
-
 
             // Start of accepting connections loop
             while(acceptingConnections){
@@ -71,47 +72,9 @@ public class RegisterServer{
                     // Sending client "Success"
                     sOutput.writeObject("Success");
                 }
-                /*
-                System.out.println("\nDo you want to continue? Enter YES/NO to continue/disconnect.");
-
-                while (awaitingOption){
-                String continueAcception = scan.nextLine();
-
-                if (continueAcception.equalsIgnoreCase("yes")){
-                System.out.print("\nContinuing connection...");
-                acceptingConnections = true;
-                awaitingOption = false;
-            } else if (continueAcception.equalsIgnoreCase("no")){
-            System.out.print("\nDisconnecting...");
-            acceptingConnections = false;
-            awaitingOption = false;
-        } else {
-        System.out.print("\nEnter YES or NO to continue accepting connections or disconnect.");
+            }
+        } catch (Exception e) {
+            return;
+        }
     }
-
-}
-*/
-}
-/*
-System.out.println("\nServer disconnected.");
-sOutput.close();
-sInput.close();
-socket.close();
-*/
-} catch (Exception e) {
-    return;
-}
-
-
-
-//Encryption
-// byte[] username = Crypto.encrypt_RSA(Crypto.strToBytes("aiman"), serverRSApub.getPublic());
-// byte[] password = Crypto.encrypt_RSA(Crypto.strToBytes("1qwe#@!"), serverRSApub.getPublic());
-// //Name Decryption
-// String name = Crypto.bytesToStr(Crypto.decrypt_RSA(username, serverRSA.getPrivate()));
-// String passwd = Crypto.bytesToStr(Crypto.decrypt_RSA(password, serverRSA.getPrivate()));
-
-
-
-}
 }

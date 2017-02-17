@@ -385,7 +385,7 @@ public class Client  {
 			return;
 		}
 
-		System.out.println("[Welcome to PPAP Secure Chat]\n");
+		System.out.println("[Welcome to PPAP Secure Chat]\nType /help to show help menu.\n\n");
 
 		//Loop forever
 		while(true) {
@@ -397,15 +397,15 @@ public class Client  {
 				//Shows the help menu when message is /LIST
 				System.out.println("\n\n[Help Menu]");
 				System.out.println("Below are a few commands to get you started.\n");
-				System.out.println("/help to show this help menu.");
-				System.out.println("/list to show all online users.");
-				System.out.println("/whisper [user] [message] to privately message an online user.");
-				System.out.println("/logout to logout from this server.");
+				System.out.println("Type '/help' to show this help menu.");
+				System.out.println("Type '/list' to show all online users.");
+				System.out.println("Type '/whisper [user] [message]' or '/w [user] [message]' to privately message an online user.");
+				System.out.println("Type '/logout' to logout from this server.");
 				System.out.println("To send a message to everyone, just type and press enter.\n\n");
 			} else if (msg.equalsIgnoreCase("/LIST")) {
 				//Show who is in when message is /LIST
 				client.sendMessage(new Message(Message.WHOISIN));
-			} else if ((msg.split("\\s+"))[0].equalsIgnoreCase("/WHISPER")) {
+			} else if ((msg.split("\\s+"))[0].equalsIgnoreCase("/WHISPER") || (msg.split("\\s+"))[0].equalsIgnoreCase("/W")) {
 				final Message whisperMsg = client.whisper(msg.split("\\s+"));
 				client.sendMessage(whisperMsg);
 				System.out.println("Whisper message sent.");
@@ -456,9 +456,10 @@ public class Client  {
 						display("[Error] The chat server has been notified of this incident.");
 					}
 				} catch (IOException e) {
-					display("Server has closed the connection.");
 					if (cg != null) {
 						cg.connectionFailed();
+					} else {
+						display("Server has closed the connection.");
 					}
 					break;
 				} catch (ClassNotFoundException e) {

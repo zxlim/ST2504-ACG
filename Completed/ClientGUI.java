@@ -211,15 +211,20 @@ public class ClientGUI extends JFrame implements ActionListener{
 			append("Press the Help button to show this help menu.");
 			append("Press the List Users button to show all online users.");
 			append("Press the Logout button to logout from this server.");
-			append("Use '/whisper [user] [message]' to privately message an online user.");
+			append("Use '/whisper [user] [message]' or '/w [user] [message]' to privately message an online user.");
 			append("To send a message to everyone, just type and press enter or the send message button.\n");
 			return;
 		}
 
 		if (objEvent == sendMsg || connected) {
-			client.sendMessageGUI(messageField.getText().trim());
-			messageField.setText("");
-			return;
+			final String msg = messageField.getText().trim();
+			if (msg == null || msg.isEmpty()) {
+				return;
+			} else {
+				client.sendMessageGUI(msg);
+				messageField.setText("");
+				return;
+			}
 		}
 	}
 
