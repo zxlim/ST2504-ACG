@@ -170,7 +170,7 @@ public class Server {
 						System.out.println("A whisper message has been sent successfully.");
 					} else {
 						//GUI mode
-						sg.appendRoom("A whisper message has been sent successfully.");
+						sg.appendRoom("A whisper message has been sent successfully.\n");
 					}
 				}
 				break;

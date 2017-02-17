@@ -300,7 +300,13 @@ public class Client  {
 	private Message whisper(final String[] msg) {
 		final String receiver = msg[1].trim();
 		final String sender = this.username;
-		final String message = msg[2].trim();
+		String message = "";
+
+		for (int i = 0; i < msg.length; i++) {
+			if (i >= 2) {
+				message += msg[i];
+			}
+		}
 
 		display("[Whisper to " + receiver + "] " + message);
 
