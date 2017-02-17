@@ -177,7 +177,7 @@ public class Client  {
 				return null;
 			}
 
-			System.out.println("Logging in...");
+			System.out.println("Logging in as " + userName + "...");
 
 			final byte[] encUsername = Crypto.encrypt_RSA(Crypto.strToBytes(userName), serverRSA.getPublic());
 			final byte[] encPassword = Crypto.encrypt_RSA(Crypto.strToBytes(password), serverRSA.getPublic());
@@ -237,7 +237,7 @@ public class Client  {
 			final boolean serverHs2Sig = Crypto.verify_ECDSA(serverHs2Msg, serverECDSA.getPublic(), serverHs2.getSignature());
 
 			if (Crypto.bytesToStr(serverHs2Msg).equals("HANDSHAKE_Established") && serverHs2Sig) {
-				display("Connection to server secured with AES-256\n");
+				display("Connection to server secured with AES-" + Integer.toString(sessionKey.length * 8) + "\n");
 				return true;
 			} else {
 				display("[Error] Failed to establish a secure connection.");
@@ -262,7 +262,7 @@ public class Client  {
 			System.out.println(msg);
 		} else {
 			//GUI mode
-			cg.append(msg + "\n");
+			cg.append(msg);
 		}
 	} //display
 
@@ -331,7 +331,7 @@ public class Client  {
 
 		try {
 			//Parse port typed by user as integer
-			portNumber = Integer.parseInt(portStr);
+			portNumber = Integer.parseInt(portStr.trim());
 		}
 		catch(NumberFormatException e) {
 			//If entered value is not integer, return and exit
@@ -346,7 +346,7 @@ public class Client  {
 		}
 
 		//Create a new Client instance (Console mode)
-		Client client = new Client(serverAddress, portNumber, null, null, null);
+		Client client = new Client(serverAddress.trim(), portNumber, null, null, null);
 
 
 		if(!client.start() || sessionKey == null || sessionKey.length == 0) {

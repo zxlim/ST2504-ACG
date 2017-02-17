@@ -32,6 +32,7 @@ public class ClientGUI extends JFrame implements ActionListener{
 	//Client instance connection
 	private boolean connected;
 
+	//ClientGUI variables
 	private String serverAddress, nameGUI, pwGUI;
 	private int serverPort;
 
@@ -134,7 +135,7 @@ public class ClientGUI extends JFrame implements ActionListener{
 
 	// called by the Client to append text in the TextArea
 	void append(String str) {
-		messageBox.append("  " + str);
+		messageBox.append("  " + str + "\n");
 		messageBox.setCaretPosition(messageBox.getText().length() - 1);
 	}
 
@@ -156,44 +157,10 @@ public class ClientGUI extends JFrame implements ActionListener{
 	}
 
 	//Button Actions
-	public void actionPerformed(ActionEvent e) {
-		Object o = e.getSource();
+	public void actionPerformed(ActionEvent event) {
+		Object objEvent = event.getSource();
 
-		if (o == logout) {
-			client.sendMessage(new Message(Message.LOGOUT));
-			displayDialog("You have logged out from the chat server.");
-			connectionFailed();
-		}
-
-		if (o == whoIsIn) {
-			client.sendMessage(new Message(Message.WHOISIN));
-			return;
-		}
-
-		if (o == sendMsg && connected) {
-			client.sendMessageGUI(messageField.getText());
-			messageField.setText("");
-			return;
-		}
-
-		if (o == help) {
-			append("\n\n  [Help Menu]");
-			append("\n  Below are a few tips to get you started.\n");
-			append("\n  Press the Help button to show this help menu.");
-			append("\n  Press the List Users button to show all online users.");
-			append("\n  Press the Logout button to logout from this server.");
-			append("\n  Use '/whisper [user] [message]' to privately message an online user.");
-			append("\n  To send a message to everyone, just type and press enter or the send message button.\n\n");
-			return;
-		}
-
-		if (connected) {
-			client.sendMessageGUI(messageField.getText());
-			messageField.setText("");
-			return;
-		}
-
-		if(o == login) {
+		if (objEvent == login) {
 			append("Logging in...\n");
 
 			try {
@@ -224,6 +191,35 @@ public class ClientGUI extends JFrame implements ActionListener{
 
 			connected = true;
 			pwGUI = null;
+			return;
+		}
+
+		if (objEvent == logout) {
+			client.sendMessage(new Message(Message.LOGOUT));
+			displayDialog("You have logged out from the chat server.");
+			connectionFailed();
+		}
+
+		if (objEvent == whoIsIn) {
+			client.sendMessage(new Message(Message.WHOISIN));
+			return;
+		}
+
+		if (objEvent == help) {
+			append("\n\n  [Help Menu]");
+			append("Below are a few tips to get you started.");
+			append("Press the Help button to show this help menu.");
+			append("Press the List Users button to show all online users.");
+			append("Press the Logout button to logout from this server.");
+			append("Use '/whisper [user] [message]' to privately message an online user.");
+			append("To send a message to everyone, just type and press enter or the send message button.\n");
+			return;
+		}
+
+		if (objEvent == sendMsg || connected) {
+			client.sendMessageGUI(messageField.getText());
+			messageField.setText("");
+			return;
 		}
 	}
 
@@ -233,54 +229,58 @@ public class ClientGUI extends JFrame implements ActionListener{
 		int portNumber = -1;
 
 		try {
+			//Main Login Panel
+			JPanel loginGUI = new JPanel(new GridLayout(3,1));
+			JLabel welcomeLabel = new JLabel("Please enter Chat Server details and User Credentials", SwingConstants.CENTER);
+
 			//Server Connection Panel
 			JPanel connectPanel = new JPanel(new GridLayout(2,2));
 
-			JLabel addrLabel = new JLabel("Server Address\t");
-			JTextField addrInput = new JTextField(15);
-			JLabel portLabel = new JLabel("Server Port\t");
-			JTextField portInput = new JTextField(15);
+			JLabel addrLabel = new JLabel("Server Address");
+			JTextField addrInput = new JTextField();
+			JLabel portLabel = new JLabel("Server Port");
+			JTextField portInput = new JTextField();
 			connectPanel.add(addrLabel);
 			connectPanel.add(addrInput);
 			connectPanel.add(portLabel);
 			connectPanel.add(portInput);
 
-			int connectResult = JOptionPane.showConfirmDialog(null, connectPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-
-			if (connectResult == JOptionPane.YES_OPTION) {
-				addr = addrInput.getText().trim();
-
-				if (addr == null || addr.isEmpty()) {
-					JOptionPane.showMessageDialog(null, "Server Address cannot be left blank.", "PPAP Secure Chat", JOptionPane.WARNING_MESSAGE);
-					return;
-				}
-				try {
-					portNumber = Integer.parseInt(portInput.getText());
-				} catch (NumberFormatException e) {
-					JOptionPane.showMessageDialog(null, "Invalid port number.\nPlease enter a port number between 0 and 65535.", "PPAP Secure Chat", JOptionPane.WARNING_MESSAGE);
-					return;
-				}
-			} else {
-				return;
-			}
-
-			//Login Panel
+			//User Credentials Panel
 			JPanel loginPanel = new JPanel(new GridLayout(2,2));
 
-			JLabel userLabel = new JLabel("Username\t");
-			JTextField userInput = new JTextField(15);
-			JLabel pwLabel = new JLabel("Password\t");
-			JPasswordField pwInput = new JPasswordField(15);
+			JLabel userLabel = new JLabel("Username");
+			JTextField userInput = new JTextField();
+			JLabel pwLabel = new JLabel("Password");
+			JPasswordField pwInput = new JPasswordField();
 			loginPanel.add(userLabel);
 			loginPanel.add(userInput);
 			loginPanel.add(pwLabel);
 			loginPanel.add(pwInput);
 
-			int loginResult = JOptionPane.showConfirmDialog(null, loginPanel, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+			loginGUI.add(welcomeLabel);
+			loginGUI.add(connectPanel);
+			loginGUI.add(loginPanel);
 
-			if (loginResult == JOptionPane.YES_OPTION) {
-				username = userInput.getText();
+			int result = JOptionPane.showConfirmDialog(null, loginGUI, "PPAP Secure Chat", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+			if (result == JOptionPane.YES_OPTION) {
+				addr = addrInput.getText().trim();
+				port = portInput.getText().trim();
+				username = userInput.getText().trim();
 				password = new String(pwInput.getPassword());
+
+				if (addr == null || addr.isEmpty() || port == null || port.isEmpty()) {
+					JOptionPane.showMessageDialog(null, "Server address and/ or port number cannot be left blank.", "PPAP Secure Chat", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
+
+				try {
+					//Parse String port into integer
+					portNumber = Integer.parseInt(port);
+				} catch (NumberFormatException e) {
+					JOptionPane.showMessageDialog(null, "Invalid port number.\nPlease enter a port number between 0 and 65535.", "PPAP Secure Chat", JOptionPane.WARNING_MESSAGE);
+					return;
+				}
 
 				if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
 					JOptionPane.showMessageDialog(null, "Username and/ or password cannot be left blank.", "PPAP Secure Chat", JOptionPane.WARNING_MESSAGE);
