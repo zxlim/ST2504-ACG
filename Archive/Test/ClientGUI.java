@@ -9,6 +9,13 @@ import java.awt.event.*;
  */
 public class ClientGUI extends JFrame implements ActionListener {
 
+	private LoginGUI loginGUI;
+
+     protected void onCreate(Bundle savedInstanceState) {
+         super.onCreate(savedInstanceState);
+         loginGUI = new LoginGUI(this);
+     }
+
 	private static final long serialVersionUID = 1L;
 	// will first hold "Username:", later on "Enter message"
 	private JLabel label;
@@ -27,6 +34,17 @@ public class ClientGUI extends JFrame implements ActionListener {
 	// the default port number
 	private int defaultPort;
 	private String defaultHost;
+
+	/*Login GUI init*/
+	//private static final long serialVersionUID = 1L;
+	//private int defaultPort;
+	//private String defaultHost;
+	private JPanel loginPanel;
+	private JLabel userLabel, pwLabel;
+	private JTextField userInput;
+	private JPasswordField pwInput;
+	private JButton loginBtn;
+	/*End Login GUI init*/
 
 	// Constructor connection receiving a socket number
 	ClientGUI(String host, int port) {
@@ -176,8 +194,8 @@ public class ClientGUI extends JFrame implements ActionListener {
 			logout.setEnabled(true);
 			whoIsIn.setEnabled(true);
 			// disable the Server and Port JTextField
-			tfServer.setEditable(false);
-			tfPort.setEditable(false);
+			tfServer.setEditable(true);
+			tfPort.setEditable(true);
 			// Action listener for when the user enter a message
 			tf.addActionListener(this);
 		}
@@ -186,7 +204,8 @@ public class ClientGUI extends JFrame implements ActionListener {
 
 	// to start the whole thing the server
 	public static void main(String[] args) {
-		new ClientGUI("localhost", 1500);
+		new LoginGUI();
+		//new ClientGUI("localhost", 1500);
 	}
 
 }
